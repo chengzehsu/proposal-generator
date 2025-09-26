@@ -1,0 +1,50 @@
+{
+  "name": "proposal-generator",
+  "version": "1.0.0",
+  "description": "智能標書產生器 - AI驅動的標案提案生成系統",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend", 
+    "shared"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "npm run build:shared && npm run build:backend && npm run build:frontend",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "build:shared": "cd shared && npm run build",
+    "test": "npm run test:backend && npm run test:frontend && npm run test:shared",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test",
+    "test:shared": "cd shared && npm test",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:frontend": "cd frontend && npm run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "type-check": "npm run type-check:backend && npm run type-check:frontend && npm run type-check:shared",
+    "type-check:backend": "cd backend && npm run type-check",
+    "type-check:frontend": "cd frontend && npm run type-check", 
+    "type-check:shared": "cd shared && npm run type-check",
+    "clean": "rm -rf node_modules backend/node_modules frontend/node_modules shared/node_modules",
+    "reset:dev": "npm run clean && npm install && npm run build:shared"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "concurrently": "^8.2.2",
+    "prettier": "^3.1.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "."
+  },
+  "author": "Claude Code",
+  "license": "MIT"
+}

@@ -1,0 +1,26 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Check if there are staged files
+if ! git diff --cached --quiet; then
+  echo "📝 Checking TypeScript..."
+  npm run type-check
+  
+  echo "🎨 Running Prettier..."
+  npx prettier --write --ignore-unknown $(git diff --cached --name-only --diff-filter=ACM)
+  
+  echo "✨ Running ESLint..."
+  npx eslint --fix $(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx|js|jsx)$')
+  
+  echo "🧪 Running tests..."
+  npm test -- --passWithNoTests
+  
+  # Add any files that were formatted
+  git add $(git diff --cached --name-only --diff-filter=ACM)
+  
+  echo "✅ Pre-commit checks passed!"
+else
+  echo "⚠️  No staged files found"
+fi

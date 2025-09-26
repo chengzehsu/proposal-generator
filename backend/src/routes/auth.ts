@@ -1,0 +1,712 @@
+import express from 'express';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { z } from 'zod';
+import { prisma } from '../utils/database';
+import { logger } from '../utils/logger';
+import { authenticateToken } from '../middleware/auth';
+
+const router = express.Router();
+
+// Validation schemas
+const registerSchema = z.object({
+  email: z.string().email('請輸入有效的電子信箱'),
+  password: z.string()
+    .min(8, '密碼至少需要8個字元')
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, 
+           '密碼必須包含大小寫字母、數字和特殊字元'),
+  name: z.string().min(1, '請輸入姓名').max(100, '姓名長度不能超過100字元'),
+  company: z.object({
+    company_name: z.string().min(1, '請輸入公司名稱').max(200, '公司名稱長度不能超過200字元'),
+    tax_id: z.string().regex(/^\d{8}$/, '統一編號必須為8位數字'),
+    address: z.string().min(1, '請輸入公司地址'),
+    phone: z.string().min(1, '請輸入聯絡電話'),
+    email: z.string().email('請輸入有效的公司電子信箱'),
+    capital: z.number().int().min(0, '資本額必須為非負整數').optional(),
+    established_date: z.string().optional(),
+    website: z.string().url('請輸入有效的網站URL').optional().or(z.literal('')),
+  })
+});
+
+const loginSchema = z.object({
+  email: z.string().email('請輸入有效的電子信箱'),
+  password: z.string().min(1, '請輸入密碼')
+});
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email('請輸入有效的電子信箱')
+});
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1, '重設token不能為空'),
+  new_password: z.string()
+    .min(8, '密碼至少需要8個字元')
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, 
+           '密碼必須包含大小寫字母、數字和特殊字元'),
+  confirm_password: z.string()
+});
+
+const inviteUserSchema = z.object({
+  email: z.string().email('請輸入有效的電子信箱'),
+  name: z.string().min(1, '請輸入姓名').max(100, '姓名長度不能超過100字元'),
+  role: z.enum(['ADMIN', 'EDITOR'], { message: '角色必須為ADMIN或EDITOR' })
+});
+
+const acceptInviteSchema = z.object({
+  token: z.string().min(1, '邀請token不能為空'),
+  password: z.string()
+    .min(8, '密碼至少需要8個字元')
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, 
+           '密碼必須包含大小寫字母、數字和特殊字元'),
+  confirm_password: z.string()
+});
+
+// JWT utility functions
+const generateToken = (userId: string) => {
+  return jwt.sign(
+    { userId },
+    process.env.JWT_SECRET || 'default-secret-key',
+    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+  );
+};
+
+const generateRefreshToken = (userId: string) => {
+  return jwt.sign(
+    { userId, type: 'refresh' },
+    process.env.JWT_REFRESH_SECRET || 'default-refresh-secret',
+    { expiresIn: '30d' }
+  );
+};
+
+// POST /api/v1/auth/register - 用戶註冊
+router.post('/register', async (req, res) => {
+  try {
+    const validatedData = registerSchema.parse(req.body);
+    const { email, password, name, company } = validatedData;
+
+    // 檢查email是否已存在
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      return res.status(409).json({
+        error: 'Conflict',
+        message: '電子信箱已被使用',
+        statusCode: 409
+      });
+    }
+
+    // 檢查統一編號是否已存在
+    const existingCompany = await prisma.company.findUnique({
+      where: { tax_id: company.tax_id }
+    });
+
+    if (existingCompany) {
+      return res.status(409).json({
+        error: 'Conflict',
+        message: '統一編號已被使用',
+        statusCode: 409
+      });
+    }
+
+    // 使用交易創建公司和用戶
+    const result = await prisma.$transaction(async (tx) => {
+      // 創建公司
+      const newCompany = await tx.company.create({
+        data: {
+          company_name: company.company_name,
+          tax_id: company.tax_id,
+          address: company.address,
+          phone: company.phone,
+          email: company.email,
+          capital: company.capital,
+          established_date: company.established_date ? new Date(company.established_date) : undefined,
+          website: company.website || undefined
+        }
+      });
+
+      // 創建用戶（第一個用戶自動成為ADMIN）
+      const hashedPassword = await bcrypt.hash(password, 12);
+      const newUser = await tx.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          name,
+          role: 'ADMIN', // 第一個用戶自動成為管理員
+          company_id: newCompany.id
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          company_id: true,
+          is_active: true,
+          created_at: true
+        }
+      });
+
+      return { user: newUser, company: newCompany };
+    });
+
+    // 生成JWT token
+    const token = generateToken(result.user.id);
+    const refreshToken = generateRefreshToken(result.user.id);
+
+    logger.info('User registered successfully', { 
+      userId: result.user.id, 
+      email: result.user.email,
+      companyId: result.company.id 
+    });
+
+    res.status(201).json({
+      user: result.user,
+      company: result.company,
+      token,
+      refresh_token: refreshToken
+    });
+
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: '輸入資料格式錯誤',
+        details: error.errors,
+        statusCode: 400
+      });
+    }
+
+    logger.error('Registration failed', { error });
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: '註冊失敗，請稍後再試',
+      statusCode: 500
+    });
+  }
+});
+
+// POST /api/v1/auth/login - 用戶登入
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = loginSchema.parse(req.body);
+
+    // 查找用戶
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        company: {
+          select: {
+            id: true,
+            company_name: true,
+            tax_id: true
+          }
+        }
+      }
+    });
+
+    if (!user || !user.is_active) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: '電子信箱或密碼錯誤',
+        statusCode: 401
+      });
+    }
+
+    // 驗證密碼
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: '電子信箱或密碼錯誤',
+        statusCode: 401
+      });
+    }
+
+    // 生成token
+    const token = generateToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
+
+    // 更新最後登入時間
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { last_login_at: new Date() }
+    });
+
+    logger.info('User logged in successfully', { userId: user.id, email });
+
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        company_id: user.company_id,
+        company: user.company
+      },
+      token,
+      refresh_token: refreshToken
+    });
+
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: '輸入資料格式錯誤',
+        details: error.errors,
+        statusCode: 400
+      });
+    }
+
+    logger.error('Login failed', { error });
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: '登入失敗，請稍後再試',
+      statusCode: 500
+    });
+  }
+});
+
+// POST /api/v1/auth/logout - 用戶登出
+router.post('/logout', authenticateToken, async (req, res) => {
+  try {
+    // TODO: 在實際應用中，應該將token加入黑名單或在Redis中管理token狀態
+    logger.info('User logged out', { userId: req.userId });
+    
+    res.status(204).send();
+  } catch (error) {
+    logger.error('Logout failed', { error });
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: '登出失敗',
+      statusCode: 500
+    });
+  }
+});
+
+// GET /api/v1/auth/profile - 獲取用戶資料
+router.get('/profile', authenticateToken, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        company_id: true,
+        is_active: true,
+        created_at: true,
+        updated_at: true,
+        last_login_at: true,
+        company: {
+          select: {
+            id: true,
+            company_name: true,
+            tax_id: true
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: '用戶不存在',
+        statusCode: 404
+      });
+    }
+
+    res.json(user);
+  } catch (error) {
+    logger.error('Get profile failed', { error });
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: '獲取用戶資料失敗',
+      statusCode: 500
+    });
+  }
+});
+
+// POST /api/v1/auth/refresh - 刷新token
+router.post('/refresh', async (req, res) => {
+  try {
+    const { refresh_token } = req.body;
+
+    if (!refresh_token) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: '請提供refresh token',
+        statusCode: 401
+      });
+    }
+
+    try {
+      const decoded = jwt.verify(refresh_token, process.env.JWT_REFRESH_SECRET || 'default-refresh-secret') as any;
+      
+      if (decoded.type !== 'refresh') {
+        throw new Error('Invalid token type');
+      }
+
+      // 檢查用戶是否存在且活躍
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.userId }
+      });
+
+      if (!user || !user.is_active) {
+        return res.status(401).json({
+          error: 'Unauthorized',
+          message: '用戶不存在或已停用',
+          statusCode: 401
+        });
+      }
+
+      // 生成新的token
+      const newToken = generateToken(user.id);
+      const newRefreshToken = generateRefreshToken(user.id);
+
+      res.json({
+        token: newToken,
+        refresh_token: newRefreshToken
+      });
+
+    } catch (jwtError) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: '無效的 refresh token',
+        statusCode: 401
+      });
+    }
+
+  } catch (error) {
+    logger.error('Token refresh failed', { error });
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Token刷新失敗',
+      statusCode: 500
+    });
+  }
+});
+
+// POST /api/v1/auth/forgot-password - 忘記密碼
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = forgotPasswordSchema.parse(req.body);
+
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: '用戶不存在',
+        statusCode: 404
+      });
+    }
+
+    // 生成重設token（在實際應用中應該存儲到資料庫並設定過期時間）
+    const resetToken = jwt.sign(
+      { userId: user.id, email, type: 'password_reset' },
+      process.env.JWT_SECRET || 'default-secret-key',
+      { expiresIn: '1h' }
+    );
+
+    // TODO: 在實際應用中，應該發送郵件而不是直接返回token
+    logger.info('Password reset requested', { userId: user.id, email });
+
+    res.json({
+      message: '密碼重設郵件已發送',
+      reset_token: process.env.NODE_ENV === 'test' ? resetToken : undefined // 只在測試環境返回token
+    });
+
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: '輸入資料格式錯誤',
+        details: error.errors,
+        statusCode: 400
+      });
+    }
+
+    logger.error('Forgot password failed', { error });
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: '密碼重設請求失敗',
+      statusCode: 500
+    });
+  }
+});
+
+// POST /api/v1/auth/verify-reset-token - 驗證重設token
+router.post('/verify-reset-token', async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: '請提供重設token',
+        statusCode: 400
+      });
+    }
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret-key') as any;
+      
+      if (decoded.type !== 'password_reset') {
+        throw new Error('Invalid token type');
+      }
+
+      res.json({
+        valid: true,
+        email: decoded.email
+      });
+
+    } catch (jwtError) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: '重設連結已過期或無效',
+        statusCode: 400
+      });
+    }
+
+  } catch (error) {
+    logger.error('Verify reset token failed', { error });
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: '驗證重設token失敗',
+      statusCode: 500
+    });
+  }
+});
+
+// POST /api/v1/auth/reset-password - 重設密碼
+router.post('/reset-password', async (req, res) => {
+  try {
+    const data = resetPasswordSchema.parse(req.body);
+    const { token, new_password, confirm_password } = data;
+
+    if (new_password !== confirm_password) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: '密碼確認不符',
+        statusCode: 400
+      });
+    }
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret-key') as any;
+      
+      if (decoded.type !== 'password_reset') {
+        throw new Error('Invalid token type');
+      }
+
+      // 更新密碼
+      const hashedPassword = await bcrypt.hash(new_password, 12);
+      await prisma.user.update({
+        where: { id: decoded.userId },
+        data: { password: hashedPassword }
+      });
+
+      logger.info('Password reset successful', { userId: decoded.userId });
+
+      res.json({
+        message: '密碼重設成功'
+      });
+
+    } catch (jwtError) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: 'Token已使用或已過期',
+        statusCode: 400
+      });
+    }
+
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: '輸入資料格式錯誤',
+        details: error.errors,
+        statusCode: 400
+      });
+    }
+
+    logger.error('Reset password failed', { error });
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: '密碼重設失敗',
+      statusCode: 500
+    });
+  }
+});
+
+// POST /api/v1/auth/invite-user - 邀請用戶（需要管理員權限）
+router.post('/invite-user', authenticateToken, async (req, res) => {
+  try {
+    // 檢查當前用戶是否為管理員
+    const currentUser = await prisma.user.findUnique({
+      where: { id: req.userId }
+    });
+
+    if (!currentUser || currentUser.role !== 'ADMIN') {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: '只有管理員可以邀請用戶',
+        statusCode: 403
+      });
+    }
+
+    const { email, name, role } = inviteUserSchema.parse(req.body);
+
+    // 檢查email是否已存在
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      return res.status(409).json({
+        error: 'Conflict',
+        message: '該電子信箱已被使用',
+        statusCode: 409
+      });
+    }
+
+    // 生成邀請token
+    const inviteToken = jwt.sign(
+      { 
+        email, 
+        name, 
+        role, 
+        companyId: currentUser.company_id,
+        invitedBy: currentUser.id,
+        type: 'invite'
+      },
+      process.env.JWT_SECRET || 'default-secret-key',
+      { expiresIn: '7d' }
+    );
+
+    // TODO: 在實際應用中，應該發送邀請郵件
+    logger.info('User invited', { email, role, invitedBy: currentUser.id });
+
+    res.json({
+      message: '邀請已發送',
+      invite_token: process.env.NODE_ENV === 'test' ? inviteToken : undefined
+    });
+
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: '輸入資料格式錯誤',
+        details: error.errors,
+        statusCode: 400
+      });
+    }
+
+    logger.error('Invite user failed', { error });
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: '邀請用戶失敗',
+      statusCode: 500
+    });
+  }
+});
+
+// POST /api/v1/auth/accept-invite - 接受邀請
+router.post('/accept-invite', async (req, res) => {
+  try {
+    const data = acceptInviteSchema.parse(req.body);
+    const { token, password, confirm_password } = data;
+
+    if (password !== confirm_password) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: '密碼確認不符',
+        statusCode: 400
+      });
+    }
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret-key') as any;
+      
+      if (decoded.type !== 'invite') {
+        throw new Error('Invalid token type');
+      }
+
+      // 檢查email是否已被使用
+      const existingUser = await prisma.user.findUnique({
+        where: { email: decoded.email }
+      });
+
+      if (existingUser) {
+        return res.status(409).json({
+          error: 'Conflict',
+          message: '該電子信箱已被使用',
+          statusCode: 409
+        });
+      }
+
+      // 創建用戶
+      const hashedPassword = await bcrypt.hash(password, 12);
+      const newUser = await prisma.user.create({
+        data: {
+          email: decoded.email,
+          password: hashedPassword,
+          name: decoded.name,
+          role: decoded.role,
+          company_id: decoded.companyId
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          company_id: true,
+          is_active: true,
+          created_at: true
+        }
+      });
+
+      // 生成登入token
+      const loginToken = generateToken(newUser.id);
+      const refreshToken = generateRefreshToken(newUser.id);
+
+      logger.info('User accepted invite', { userId: newUser.id, email: decoded.email });
+
+      res.status(201).json({
+        user: newUser,
+        token: loginToken,
+        refresh_token: refreshToken
+      });
+
+    } catch (jwtError) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: '無效的邀請連結',
+        statusCode: 400
+      });
+    }
+
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: '輸入資料格式錯誤',
+        details: error.errors,
+        statusCode: 400
+      });
+    }
+
+    logger.error('Accept invite failed', { error });
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: '接受邀請失敗',
+      statusCode: 500
+    });
+  }
+});
+
+export default router;

@@ -1,0 +1,458 @@
+// Prisma Schema for 智能標書產生器系統
+// Based on data model specification
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 使用者和權限系統
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String   // bcrypt hash
+  name        String
+  role        UserRole @default(EDITOR)
+  company_id  String?
+  is_active   Boolean  @default(true)
+  last_login  DateTime?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // Relations
+  company            Company?           @relation(fields: [company_id], references: [id])
+  created_proposals  Proposal[]         @relation("ProposalCreator")
+  edited_proposals   Proposal[]         @relation("ProposalEditor") 
+  created_templates  ProposalTemplate[] @relation("TemplateCreator")
+  proposal_history   ProposalHistory[]  @relation("HistoryCreator")
+  audit_logs         AuditLog[]         @relation("AuditUser")
+
+  @@map("users")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  EDITOR  
+  VIEWER
+
+  @@map("user_role")
+}
+
+// 公司資料系統
+model Company {
+  id               String    @id @default(cuid())
+  company_name     String
+  tax_id           String    @unique
+  capital          Decimal?  @db.Decimal(15, 2)
+  established_date DateTime? @db.Date
+  address          String
+  phone            String
+  email            String
+  website          String?
+  version          Int       @default(1) // 樂觀鎖
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  // Relations
+  users         User[]
+  profiles      CompanyProfile[]
+  team_members  TeamMember[]
+  projects      Project[]
+  awards        Award[]
+  milestones    Milestone[]
+  capabilities  Capability[]
+  future_plans  FuturePlan[]
+  proposals     Proposal[]
+
+  @@map("companies")
+}
+
+model CompanyProfile {
+  id                 String   @id @default(cuid())
+  company_id         String
+  version_name       String
+  vision             String?  @db.Text
+  mission            String?  @db.Text
+  core_values        String?  @db.Text
+  business_scope     String   @db.Text
+  description_full   String   @db.Text
+  description_medium String?  @db.Text
+  description_short  String?  @db.Text
+  is_active          Boolean  @default(true)
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  // Relations
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+
+  @@unique([company_id, version_name])
+  @@map("company_profiles")
+}
+
+model TeamMember {
+  id            String   @id @default(cuid())
+  company_id    String
+  name          String
+  title         String
+  department    String?
+  education     String?  @db.Text
+  experience    String?  @db.Text
+  expertise     String?  @db.Text
+  photo_url     String?
+  is_key_member Boolean  @default(false)
+  display_order Int      @default(0)
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  // Relations
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+
+  @@map("team_members")
+}
+
+model Project {
+  id           String               @id @default(cuid())
+  company_id   String
+  project_name String
+  client_name  String?
+  start_date   DateTime?            @db.Date
+  end_date     DateTime?            @db.Date
+  amount       Decimal?             @db.Decimal(15, 2)
+  scale        String?
+  description  String               @db.Text
+  achievements String?              @db.Text
+  tags         String[]
+  is_public    Boolean              @default(true)
+  attachments  Json?                // JSON array of attachment objects
+  created_at   DateTime             @default(now())
+  updated_at   DateTime             @updatedAt
+
+  // Relations
+  company            Company             @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  proposal_submission ProposalSubmission? @relation("CreatedFromProject")
+
+  @@map("projects")
+}
+
+model Award {
+  id              String               @id @default(cuid())
+  company_id      String
+  award_name      String
+  issuer          String
+  award_date      DateTime?            @db.Date
+  description     String?              @db.Text
+  award_type      AwardType
+  amount          Decimal?             @db.Decimal(15, 2)
+  certificate_url String?
+  created_at      DateTime             @default(now())
+  updated_at      DateTime             @updatedAt
+
+  // Relations
+  company             Company             @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  proposal_submission ProposalSubmission? @relation("CreatedFromAward")
+
+  @@map("awards")
+}
+
+enum AwardType {
+  GOVERNMENT_GRANT
+  COMPETITION
+  CERTIFICATION
+  RECOGNITION
+
+  @@map("award_type")
+}
+
+model Milestone {
+  id             String   @id @default(cuid())
+  company_id     String
+  milestone_date DateTime @db.Date
+  title          String
+  description    String?  @db.Text
+  milestone_type String?
+  importance     Int      @db.SmallInt // 1-5
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  // Relations
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+
+  @@map("milestones")
+}
+
+model Capability {
+  id               String   @id @default(cuid())
+  company_id       String
+  tech_name        String
+  category         String?
+  proficiency      String?
+  related_projects Int[]    // Array of project IDs
+  certifications   String?  @db.Text
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  // Relations
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+
+  @@map("capabilities")
+}
+
+model FuturePlan {
+  id             String   @id @default(cuid())
+  company_id     String
+  title          String
+  content        String   @db.Text
+  timeframe      String?
+  related_fields String[]
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  // Relations
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+
+  @@map("future_plans")
+}
+
+// 標書範本系統
+model ProposalTemplate {
+  id                 String                    @id @default(cuid())
+  template_name      String
+  template_type      TemplateType
+  description        String?                   @db.Text
+  is_system_template Boolean                   @default(false)
+  created_by         String?
+  created_at         DateTime                  @default(now())
+  updated_at         DateTime                  @updatedAt
+
+  // Relations
+  creator              User?                     @relation("TemplateCreator", fields: [created_by], references: [id])
+  sections             TemplateSection[]
+  format_specs         FormatSpec[]
+  attachment_requirements AttachmentRequirement[]
+  proposals            Proposal[]
+
+  @@map("proposal_templates")
+}
+
+enum TemplateType {
+  GOVERNMENT_GRANT
+  ENTERPRISE_BID
+  AWARD_APPLICATION
+  CUSTOM
+
+  @@map("template_type")
+}
+
+model TemplateSection {
+  id           String           @id @default(cuid())
+  template_id  String
+  section_name String
+  section_order Int
+  is_required  Boolean          @default(false)
+  min_words    Int?
+  max_words    Int?
+  content_hint String?          @db.Text
+  data_types   DataSourceType[]
+  score_weight Decimal?         @db.Decimal(5, 2) // 0-100
+  created_at   DateTime         @default(now())
+  updated_at   DateTime         @updatedAt
+
+  // Relations
+  template          ProposalTemplate  @relation(fields: [template_id], references: [id], onDelete: Cascade)
+  proposal_sections ProposalSection[]
+
+  @@map("template_sections")
+}
+
+enum DataSourceType {
+  COMPANY_BASIC
+  COMPANY_PROFILE
+  TEAM_MEMBERS
+  PROJECTS
+  AWARDS
+  CAPABILITIES
+  MILESTONES
+  FUTURE_PLANS
+  CUSTOM_INPUT
+
+  @@map("data_source_type")
+}
+
+model FormatSpec {
+  id                   String   @id @default(cuid())
+  template_id          String
+  page_size            String?  @default("A4")
+  margins              Json?    // {top, right, bottom, left}
+  font_family          String?  @default("Arial")
+  font_size            Int?     @default(12)
+  line_height          Decimal? @db.Decimal(3, 1) @default(1.5)
+  max_pages            Int?
+  other_requirements   Json?
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+
+  // Relations
+  template ProposalTemplate @relation(fields: [template_id], references: [id], onDelete: Cascade)
+
+  @@unique([template_id])
+  @@map("format_specs")
+}
+
+model AttachmentRequirement {
+  id              String   @id @default(cuid())
+  template_id     String
+  attachment_name String
+  description     String?  @db.Text
+  is_required     Boolean  @default(false)
+  file_format     String?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  // Relations
+  template ProposalTemplate @relation(fields: [template_id], references: [id], onDelete: Cascade)
+
+  @@map("attachment_requirements")
+}
+
+// 標書內容系統
+model Proposal {
+  id                   String            @id @default(cuid())
+  proposal_name        String
+  template_id          String
+  company_id           String
+  status               ProposalStatus    @default(DRAFT)
+  created_by           String
+  last_edited_by       String
+  word_count           Int               @default(0)
+  generated_with_ai    Boolean           @default(false)
+  ai_generation_prompt String?           @db.Text
+  created_at           DateTime          @default(now())
+  updated_at           DateTime          @updatedAt
+
+  // Relations
+  template           ProposalTemplate     @relation(fields: [template_id], references: [id])
+  company            Company              @relation(fields: [company_id], references: [id])
+  creator            User                 @relation("ProposalCreator", fields: [created_by], references: [id])
+  last_editor        User                 @relation("ProposalEditor", fields: [last_edited_by], references: [id])
+  sections           ProposalSection[]
+  history            ProposalHistory[]
+  submission         ProposalSubmission?
+
+  @@map("proposals")
+}
+
+enum ProposalStatus {
+  DRAFT
+  IN_REVIEW
+  COMPLETED
+  SUBMITTED
+
+  @@map("proposal_status")
+}
+
+model ProposalSection {
+  id                  String   @id @default(cuid())
+  proposal_id         String
+  section_id          String
+  content             String   @db.Text
+  word_count          Int      @default(0)
+  is_ai_generated     Boolean  @default(false)
+  ai_confidence_score Decimal? @db.Decimal(3, 2) // 0.00-1.00
+  section_order       Int
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+
+  // Relations
+  proposal Proposal        @relation(fields: [proposal_id], references: [id], onDelete: Cascade)
+  section  TemplateSection @relation(fields: [section_id], references: [id])
+
+  @@unique([proposal_id, section_id])
+  @@map("proposal_sections")
+}
+
+model ProposalHistory {
+  id             String   @id @default(cuid())
+  proposal_id    String
+  version_number Int
+  content        Json     // Complete proposal snapshot
+  created_by     String
+  created_at     DateTime @default(now())
+
+  // Relations
+  proposal Proposal @relation(fields: [proposal_id], references: [id], onDelete: Cascade)
+  creator  User     @relation("HistoryCreator", fields: [created_by], references: [id])
+
+  @@unique([proposal_id, version_number])
+  @@map("proposal_history")
+}
+
+model ProposalSubmission {
+  id                 String   @id @default(cuid())
+  proposal_id        String   @unique
+  proposal_name      String
+  submission_date    DateTime? @db.Date
+  result             SubmissionResult?
+  award_amount       Decimal?  @db.Decimal(15, 2)
+  feedback           String?   @db.Text
+  is_success         Boolean?
+  created_project_id String?   @unique
+  created_award_id   String?   @unique
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
+
+  // Relations
+  proposal        Proposal @relation(fields: [proposal_id], references: [id], onDelete: Cascade)
+  created_project Project? @relation("CreatedFromProject", fields: [created_project_id], references: [id])
+  created_award   Award?   @relation("CreatedFromAward", fields: [created_award_id], references: [id])
+
+  @@map("proposal_submissions")
+}
+
+enum SubmissionResult {
+  PENDING
+  WON
+  LOST
+
+  @@map("submission_result")
+}
+
+// 審計日誌系統
+model AuditLog {
+  id          String      @id @default(cuid())
+  table_name  String
+  record_id   String
+  action      AuditAction
+  old_values  Json?
+  new_values  Json?
+  changed_by  String
+  changed_at  DateTime    @default(now())
+  ip_address  String?
+  user_agent  String?
+
+  // Relations
+  user User @relation("AuditUser", fields: [changed_by], references: [id])
+
+  @@index([table_name, record_id])
+  @@index([changed_by])
+  @@index([changed_at])
+  @@map("audit_logs")
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  EXPORT
+  GENERATE
+
+  @@map("audit_action")
+}
