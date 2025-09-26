@@ -1,0 +1,41 @@
+{
+  "name": "proposal-generator",
+  "description": "智能標書產生器 - AI驅動的標案提案生成系統",
+  "services": {
+    "backend": {
+      "name": "proposal-generator-backend",
+      "type": "nodejs",
+      "buildCommand": "npm run build:shared && npm run build:backend",
+      "startCommand": "cd backend && npm start",
+      "port": 3001,
+      "environment": {
+        "NODE_ENV": "production"
+      },
+      "domains": ["api.proposal-generator.app"],
+      "healthCheck": {
+        "path": "/health",
+        "interval": 30
+      }
+    },
+    "frontend": {
+      "name": "proposal-generator-frontend", 
+      "type": "static",
+      "buildCommand": "npm run build:shared && npm run build:frontend",
+      "outputDirectory": "frontend/dist",
+      "domains": ["proposal-generator.app"],
+      "spa": true
+    },
+    "database": {
+      "name": "proposal-generator-db",
+      "type": "postgresql",
+      "version": "14"
+    }
+  },
+  "networking": {
+    "cors": {
+      "allowedOrigins": ["https://proposal-generator.app"],
+      "allowedMethods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      "allowedHeaders": ["Content-Type", "Authorization"]
+    }
+  }
+}

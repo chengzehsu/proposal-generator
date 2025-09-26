@@ -1,0 +1,92 @@
+# Dependencies
+node_modules
+*/node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Git
+.git
+.gitignore
+
+# Build outputs (will be rebuilt in container)
+dist
+build
+backend/dist
+frontend/dist
+shared/dist
+
+# Database
+*.db
+*.sqlite
+
+# Logs
+logs
+*.log
+backend/logs
+frontend/logs
+
+# Cache
+.cache
+.parcel-cache
+.next
+.nuxt
+backend/.cache
+frontend/.cache
+
+# Testing
+coverage
+.nyc_output
+backend/coverage
+frontend/coverage
+shared/coverage
+
+# Temporary files
+*.tmp
+*.temp
+.temp
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Uploads (should be handled by cloud storage in production)
+uploads
+backend/uploads
+
+# Development files
+README.md
+CLAUDE.md
+PROJECT_STATUS.md
+specs/
+.specify/
+.claude/
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
