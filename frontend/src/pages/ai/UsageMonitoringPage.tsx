@@ -13,7 +13,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   Alert,
   Button,
   Dialog,
@@ -26,14 +25,10 @@ import {
   ListItem,
   ListItemText,
   ListItemIcon,
-  Divider,
 } from '@mui/material'
 import {
-  Analytics,
   TrendingUp,
   TrendingDown,
-  Info,
-  Warning,
   CheckCircle,
   AutoAwesome,
   Translate,
@@ -67,7 +62,7 @@ const UsageMonitoringPage: React.FC = () => {
   const [selectedMetric, setSelectedMetric] = useState<any>(null)
 
   // 獲取 AI 使用統計
-  const { data: usageData, isLoading } = useQuery({
+  const { data: usageData } = useQuery({
     queryKey: ['ai', 'usage'],
     queryFn: () => aiApi.getUsage(),
     select: (data) => data.data,
@@ -307,7 +302,7 @@ const UsageMonitoringPage: React.FC = () => {
       <Card>
         <CardContent>
           <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-            <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
+            <Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)}>
               <Tab label="服務使用統計" />
               <Tab label="每日使用趨勢" />
               <Tab label="效能分析" />

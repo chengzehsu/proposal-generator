@@ -24,7 +24,6 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  FormControlLabel,
 } from '@mui/material'
 import {
   CloudUpload,
@@ -32,8 +31,6 @@ import {
   AutoAwesome,
   CheckCircle,
   ExpandMore,
-  FindInPage,
-  Assignment,
   Save,
   Download,
 } from '@mui/icons-material'
@@ -200,7 +197,7 @@ const RequirementExtractionPage: React.FC = () => {
                 萃取流程
               </Typography>
               <Stepper activeStep={activeStep} orientation="vertical">
-                {steps.map((step, index) => (
+                {steps.map((step, _) => (
                   <Step key={step.label}>
                     <StepLabel>
                       <Typography variant="subtitle2">{step.label}</Typography>

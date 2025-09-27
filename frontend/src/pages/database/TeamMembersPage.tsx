@@ -5,19 +5,16 @@ import {
   Card,
   CardContent,
   Button,
-  DataGrid,
-  GridColDef,
-  GridActionsCellItem,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextField,
   Grid,
-  Chip,
   Avatar,
   IconButton,
 } from '@mui/material'
+import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid'
 import {
   Add,
   Edit,

@@ -21,7 +21,6 @@ import {
   ListItemText,
   ListItemIcon,
   Divider,
-  Snackbar,
 } from '@mui/material'
 import {
   ArrowBack,
@@ -79,15 +78,19 @@ const ProposalEditorPage: React.FC = () => {
     queryFn: () => proposalsApi.getProposal(id!),
     enabled: !!id,
     select: (data) => data.data as ProposalData,
-    onSuccess: (data) => {
-      setContent(data.content.main || '')
-      form.reset({
-        title: data.title,
-        client_name: data.client_name,
-        deadline: data.deadline,
-      })
-    },
   })
+
+  // Populate form when proposal data is loaded
+  useEffect(() => {
+    if (proposal) {
+      setContent(proposal.content.main || '')
+      form.reset({
+        title: proposal.title,
+        client_name: proposal.client_name,
+        deadline: proposal.deadline,
+      })
+    }
+  }, [proposal, form])
 
   // 載入版本歷史
   const { data: versions = [] } = useQuery({
@@ -407,7 +410,7 @@ function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout
+  let timeout: ReturnType<typeof setTimeout>
   return (...args: Parameters<T>) => {
     clearTimeout(timeout)
     timeout = setTimeout(() => func(...args), wait)

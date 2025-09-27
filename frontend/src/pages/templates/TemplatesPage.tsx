@@ -35,9 +35,7 @@ import {
   MoreVert,
   Description,
   Star,
-  StarBorder,
   Public,
-  Lock,
   Visibility,
 } from '@mui/icons-material'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'

@@ -101,7 +101,6 @@ const CompanyDataPage: React.FC = () => {
   const handleSave = async (data: CompanyForm) => {
     const updateData = {
       ...data,
-      capital: data.capital ? parseFloat(data.capital) : undefined,
       version: currentVersion,
     }
     

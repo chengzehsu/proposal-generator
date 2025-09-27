@@ -3,10 +3,7 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import CharacterCount from '@tiptap/extension-character-count'
-import Table from '@tiptap/extension-table'
-import TableRow from '@tiptap/extension-table-row'
-import TableHeader from '@tiptap/extension-table-header'
-import TableCell from '@tiptap/extension-table-cell'
+import { Table } from '@tiptap/extension-table'
 import Image from '@tiptap/extension-image'
 import {
   Box,
@@ -14,7 +11,6 @@ import {
   Toolbar,
   IconButton,
   Divider,
-  Typography,
   Button,
   Dialog,
   DialogTitle,
@@ -33,7 +29,7 @@ import {
   Code,
   Undo,
   Redo,
-  Table as TableIcon,
+  TableChart as TableIcon,
   Image as ImageIcon,
   AutoAwesome,
   Save,
@@ -72,10 +68,10 @@ const ProposalEditor: React.FC<ProposalEditorProps> = ({
       }),
       Table.configure({
         resizable: true,
+        HTMLAttributes: {
+          class: 'proposal-table',
+        },
       }),
-      TableRow,
-      TableHeader,
-      TableCell,
       Image.configure({
         HTMLAttributes: {
           class: 'proposal-image',
@@ -150,8 +146,8 @@ const ProposalEditor: React.FC<ProposalEditorProps> = ({
               </IconButton>
               <IconButton
                 size="small"
-                onClick={() => editor.chain().focus().toggleUnderline().run()}
-                color={editor.isActive('underline') ? 'primary' : 'default'}
+                onClick={() => editor.chain().focus().toggleStrike().run()}
+                color={editor.isActive('strike') ? 'primary' : 'default'}
               >
                 <FormatUnderlined />
               </IconButton>

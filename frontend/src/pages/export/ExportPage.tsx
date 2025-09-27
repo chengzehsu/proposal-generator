@@ -14,9 +14,7 @@ import {
   FormControlLabel,
   Divider,
   Chip,
-  Paper,
   CircularProgress,
-  Alert,
   Table,
   TableBody,
   TableCell,
@@ -28,14 +26,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   Tabs,
   Tab,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  ListItemSecondaryAction,
 } from '@mui/material'
 import {
   GetApp,
@@ -50,7 +42,7 @@ import {
   Error as ErrorIcon,
   Schedule,
   History,
-  Batch,
+  Layers as Batch,
 } from '@mui/icons-material'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
@@ -254,7 +246,7 @@ const ExportPage: React.FC = () => {
       </Box>
 
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
+        <Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)}>
           <Tab label="單個匯出" />
           <Tab label="批次匯出" />
           <Tab label="匯出歷史" />

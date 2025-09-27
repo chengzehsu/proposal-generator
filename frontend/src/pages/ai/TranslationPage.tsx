@@ -15,7 +15,6 @@ import {
   Chip,
   Paper,
   CircularProgress,
-  Alert,
   Tabs,
   Tab,
   IconButton,
@@ -29,11 +28,10 @@ import {
   ContentCopy,
   Save,
   History,
-  Delete,
-  Swap,
+  SwapHoriz as Swap,
   VolumeUp,
 } from '@mui/icons-material'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { aiApi } from '@/services/api'
 import toast from 'react-hot-toast'
@@ -166,7 +164,7 @@ const TranslationPage: React.FC = () => {
       </Box>
 
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
+        <Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)}>
           <Tab label="翻譯工具" />
           <Tab label="翻譯歷史" />
         </Tabs>

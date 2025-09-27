@@ -11,7 +11,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Alert,
   Divider,
   Chip,
   Paper,
@@ -43,7 +42,6 @@ interface ImprovementResult {
 
 const ContentImprovementPage: React.FC = () => {
   const [improvementResult, setImprovementResult] = useState<ImprovementResult | null>(null)
-  const [selectedContent, setSelectedContent] = useState('')
 
   const form = useForm({
     defaultValues: {
@@ -80,7 +78,6 @@ const ContentImprovementPage: React.FC = () => {
   }
 
   const handleSelectContent = (content: string) => {
-    setSelectedContent(content)
     form.setValue('content', content)
   }
 

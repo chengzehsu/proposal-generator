@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import {
   Box,
   Typography,
@@ -9,7 +9,7 @@ import {
   Grid,
 } from '@mui/material'
 import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid'
-import { Add, Edit, Delete, Visibility, Public, Lock } from '@mui/icons-material'
+import { Add, Edit, Delete, Public, Lock } from '@mui/icons-material'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { projectsApi } from '@/services/api'
 import toast from 'react-hot-toast'
