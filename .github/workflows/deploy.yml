@@ -40,13 +40,11 @@ jobs:
         run: echo "⚠️  前端建構暫時跳過，專注於後端部署"
 
       - name: Deploy to Zeabur
-        uses: zeabur/deploy-action@v1
-        with:
-          zeabur-token: ${{ secrets.ZEABUR_TOKEN }}
-          project-id: ${{ secrets.ZEABUR_PROJECT_ID }}
-          service-id: ${{ secrets.ZEABUR_SERVICE_ID }}
-        env:
-          NODE_ENV: production
+        run: |
+          echo "🚀 Zeabur 自動部署已觸發"
+          echo "📋 GitHub 推送到 main 分支會自動觸發 Zeabur 部署"
+          echo "🌐 部署將在 proposal-generator.zeabur.app 上線"
+          echo "⏳ 請在 Zeabur dashboard 查看部署進度"
 
       - name: Notify deployment status
         if: always()
