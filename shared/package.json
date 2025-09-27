@@ -1,7 +1,7 @@
 {
   "name": "@proposal-generator/shared",
   "version": "1.0.0",
-  "description": "z��"hq(�%��w�",
+  "description": "智能標書產生器共用類型和工具庫",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
