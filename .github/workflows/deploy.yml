@@ -23,29 +23,15 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
-      - name: Install root dependencies
-        run: npm install --legacy-peer-deps
+      - name: Install all dependencies
+        run: npm ci --legacy-peer-deps
 
-      - name: Install shared dependencies
-        run: cd shared && npm install --legacy-peer-deps
+      - name: Generate Prisma client
+        working-directory: ./backend
+        run: npx prisma generate
 
-      - name: Install backend dependencies
-        run: cd backend && npm install --legacy-peer-deps
-
-      - name: Install frontend dependencies
-        run: cd frontend && npm install --legacy-peer-deps
-
-      - name: Install Prisma client and generate
-        run: cd backend && npm install @prisma/client && npx prisma generate
-
-      - name: Build shared package
-        run: npm run build:shared
-
-      - name: Build backend
-        run: npm run build:backend
-
-      - name: Build frontend
-        run: npm run build:frontend
+      - name: Build all packages
+        run: npm run build
 
       - name: Run database migrations
         env:

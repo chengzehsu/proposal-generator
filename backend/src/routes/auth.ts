@@ -1,6 +1,6 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { z } from 'zod';
 import { prisma } from '../utils/database';
 import { logger } from '../utils/logger';
@@ -62,19 +62,31 @@ const acceptInviteSchema = z.object({
 });
 
 // JWT utility functions
-const generateToken = (userId: string) => {
+const generateToken = (userId: string): string => {
+  const secret = process.env.JWT_SECRET || 'default-secret-key';
+  const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
+  
+  const options: SignOptions = {
+    expiresIn
+  };
+  
   return jwt.sign(
     { userId },
-    process.env.JWT_SECRET || 'default-secret-key',
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    secret,
+    options
   );
 };
 
-const generateRefreshToken = (userId: string) => {
+const generateRefreshToken = (userId: string): string => {
+  const secret = process.env.JWT_REFRESH_SECRET || 'default-refresh-secret';
+  const options: SignOptions = {
+    expiresIn: '30d'
+  };
+  
   return jwt.sign(
     { userId, type: 'refresh' },
-    process.env.JWT_REFRESH_SECRET || 'default-refresh-secret',
-    { expiresIn: '30d' }
+    secret,
+    options
   );
 };
 
@@ -406,10 +418,11 @@ router.post('/forgot-password', async (req, res) => {
     }
 
     // 生成重設token（在實際應用中應該存儲到資料庫並設定過期時間）
+    const resetOptions: SignOptions = { expiresIn: '1h' };
     const resetToken = jwt.sign(
       { userId: user.id, email, type: 'password_reset' },
       process.env.JWT_SECRET || 'default-secret-key',
-      { expiresIn: '1h' }
+      resetOptions
     );
 
     // TODO: 在實際應用中，應該發送郵件而不是直接返回token
@@ -575,6 +588,7 @@ router.post('/invite-user', authenticateToken, async (req, res) => {
     }
 
     // 生成邀請token
+    const inviteOptions: SignOptions = { expiresIn: '7d' };
     const inviteToken = jwt.sign(
       { 
         email, 
@@ -585,7 +599,7 @@ router.post('/invite-user', authenticateToken, async (req, res) => {
         type: 'invite'
       },
       process.env.JWT_SECRET || 'default-secret-key',
-      { expiresIn: '7d' }
+      inviteOptions
     );
 
     // TODO: 在實際應用中，應該發送邀請郵件

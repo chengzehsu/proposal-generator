@@ -1,13 +1,12 @@
 // Prisma Schema for 智能標書產生器系統
-// Based on data model specification
+// SQLite 兼容版本
 
 generator client {
   provider = "prisma-client-js"
-  output   = "./client"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -15,337 +14,323 @@ datasource db {
 model User {
   id          String   @id @default(cuid())
   email       String   @unique
-  password    String   // bcrypt hash
-  name        String
-  role        UserRole @default(EDITOR)
-  company_id  String?
+  password    String
+  name        String?
   is_active   Boolean  @default(true)
-  last_login  DateTime?
+  role        UserRole @default(USER)
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
+  last_login  DateTime?
 
-  // Relations
-  company            Company?           @relation(fields: [company_id], references: [id])
-  created_proposals  Proposal[]         @relation("ProposalCreator")
-  edited_proposals   Proposal[]         @relation("ProposalEditor") 
-  created_templates  ProposalTemplate[] @relation("TemplateCreator")
-  proposal_history   ProposalHistory[]  @relation("HistoryCreator")
-  audit_logs         AuditLog[]         @relation("AuditUser")
+  // 關聯關係
+  companies   Company[]
+  proposals   Proposal[]
+  audit_logs  AuditLog[]
 
   @@map("users")
 }
 
-enum UserRole {
-  SUPER_ADMIN
-  ADMIN
-  EDITOR  
-  VIEWER
-
-  @@map("user_role")
-}
-
-// 公司資料系統
+// 公司基本資料
 model Company {
-  id               String    @id @default(cuid())
-  company_name     String
-  tax_id           String    @unique
-  capital          Decimal?  @db.Decimal(15, 2)
-  established_date DateTime? @db.Date
-  address          String
-  phone            String
-  email            String
-  website          String?
-  version          Int       @default(1) // 樂觀鎖
-  created_at       DateTime  @default(now())
-  updated_at       DateTime  @updatedAt
+  id                String   @id @default(cuid())
+  user_id           String
+  name              String
+  tax_id            String   @unique
+  capital           String?  // 改為 String 存儲數字
+  established_date  DateTime?
+  phone             String?
+  email             String?
+  website           String?
+  address           String?
+  postal_code       String?
+  industry          String?
+  employee_count    Int?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+  version           Int      @default(1)
 
-  // Relations
-  users         User[]
-  profiles      CompanyProfile[]
-  team_members  TeamMember[]
-  projects      Project[]
-  awards        Award[]
-  milestones    Milestone[]
-  capabilities  Capability[]
-  future_plans  FuturePlan[]
-  proposals     Proposal[]
+  // 關聯關係
+  user             User                @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  company_profile  CompanyProfile?
+  team_members     TeamMember[]
+  projects         Project[]
+  awards           Award[]
+  capabilities     Capability[]
+  milestones       CompanyMilestone[]
+  proposals        Proposal[]
 
   @@map("companies")
 }
 
+// 公司詳細簡介（版本控制）
 model CompanyProfile {
   id                 String   @id @default(cuid())
-  company_id         String
+  company_id         String   @unique
   version_name       String
-  vision             String?  @db.Text
-  mission            String?  @db.Text
-  core_values        String?  @db.Text
-  business_scope     String   @db.Text
-  description_full   String   @db.Text
-  description_medium String?  @db.Text
-  description_short  String?  @db.Text
-  is_active          Boolean  @default(true)
+  vision             String?
+  mission            String?
+  core_values        String?
+  business_scope     String
+  description_full   String
+  description_medium String?
+  description_short  String?
   created_at         DateTime @default(now())
   updated_at         DateTime @updatedAt
 
-  // Relations
+  // 關聯關係
   company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
 
-  @@unique([company_id, version_name])
   @@map("company_profiles")
 }
 
+// 團隊成員
 model TeamMember {
-  id            String   @id @default(cuid())
-  company_id    String
-  name          String
-  title         String
-  department    String?
-  education     String?  @db.Text
-  experience    String?  @db.Text
-  expertise     String?  @db.Text
-  photo_url     String?
-  is_key_member Boolean  @default(false)
-  display_order Int      @default(0)
-  is_active     Boolean  @default(true)
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
+  id           String    @id @default(cuid())
+  company_id   String
+  name         String
+  position     String
+  email        String?
+  phone        String?
+  department   String?
+  education    String?
+  experience   String?
+  expertise    String?
+  is_active    Boolean   @default(true)
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+  deleted_at   DateTime?
 
-  // Relations
+  // 關聯關係
   company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
 
   @@map("team_members")
 }
 
+// 專案實績
 model Project {
-  id           String               @id @default(cuid())
+  id           String    @id @default(cuid())
   company_id   String
-  project_name String
+  name         String
   client_name  String?
-  start_date   DateTime?            @db.Date
-  end_date     DateTime?            @db.Date
-  amount       Decimal?             @db.Decimal(15, 2)
+  start_date   DateTime?
+  end_date     DateTime?
+  amount       String?   // 改為 String 存儲金額
+  currency     String?
   scale        String?
-  description  String               @db.Text
-  achievements String?              @db.Text
-  tags         String[]
-  is_public    Boolean              @default(true)
-  attachments  Json?                // JSON array of attachment objects
-  created_at   DateTime             @default(now())
-  updated_at   DateTime             @updatedAt
+  description  String
+  achievements String?
+  tags         String?   // 改為單一字符串，JSON 格式存儲標籤
+  is_public    Boolean   @default(true)
+  attachments  String?   // 改為 String 存儲 JSON
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
 
-  // Relations
-  company            Company             @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  proposal_submission ProposalSubmission? @relation("CreatedFromProject")
+  // 關聯關係
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
 
   @@map("projects")
 }
 
+// 獲獎紀錄
 model Award {
-  id              String               @id @default(cuid())
-  company_id      String
-  award_name      String
-  issuer          String
-  award_date      DateTime?            @db.Date
-  description     String?              @db.Text
-  award_type      AwardType
-  amount          Decimal?             @db.Decimal(15, 2)
-  certificate_url String?
-  created_at      DateTime             @default(now())
-  updated_at      DateTime             @updatedAt
+  id          String    @id @default(cuid())
+  company_id  String
+  title       String
+  issuer      String
+  award_date  DateTime?
+  description String?
+  award_type  AwardType
+  amount      String?   // 改為 String 存儲金額
+  is_public   Boolean   @default(true)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
 
-  // Relations
-  company             Company             @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  proposal_submission ProposalSubmission? @relation("CreatedFromAward")
+  // 關聯關係
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
 
   @@map("awards")
 }
 
-enum AwardType {
-  GOVERNMENT_GRANT
-  COMPETITION
-  CERTIFICATION
-  RECOGNITION
-
-  @@map("award_type")
-}
-
-model Milestone {
+// 公司里程碑
+model CompanyMilestone {
   id             String   @id @default(cuid())
   company_id     String
-  milestone_date DateTime @db.Date
+  milestone_date DateTime
   title          String
-  description    String?  @db.Text
+  description    String?
   milestone_type String?
-  importance     Int      @db.SmallInt // 1-5
+  importance     Int      // 1-5
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 
-  // Relations
+  // 關聯關係
   company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
 
-  @@map("milestones")
+  @@map("company_milestones")
 }
 
+// 公司技術能力
 model Capability {
   id               String   @id @default(cuid())
   company_id       String
-  tech_name        String
-  category         String?
+  name             String
+  category         String
+  description      String?
   proficiency      String?
-  related_projects Int[]    // Array of project IDs
-  certifications   String?  @db.Text
+  related_projects String?  // 改為 String 存儲項目 ID 列表
+  certifications   String?
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 
-  // Relations
+  // 關聯關係
   company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
 
   @@map("capabilities")
 }
 
-model FuturePlan {
-  id             String   @id @default(cuid())
-  company_id     String
-  title          String
-  content        String   @db.Text
-  timeframe      String?
-  related_fields String[]
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updatedAt
-
-  // Relations
-  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
-
-  @@map("future_plans")
-}
-
 // 標書範本系統
 model ProposalTemplate {
-  id                 String                    @id @default(cuid())
-  template_name      String
-  template_type      TemplateType
-  description        String?                   @db.Text
-  is_system_template Boolean                   @default(false)
-  created_by         String?
-  created_at         DateTime                  @default(now())
-  updated_at         DateTime                  @updatedAt
+  id           String            @id @default(cuid())
+  name         String
+  description  String?
+  category     String
+  is_default   Boolean           @default(false)
+  is_active    Boolean           @default(true)
+  version      String            @default("1.0")
+  created_at   DateTime          @default(now())
+  updated_at   DateTime          @updatedAt
 
-  // Relations
-  creator              User?                     @relation("TemplateCreator", fields: [created_by], references: [id])
-  sections             TemplateSection[]
-  format_specs         FormatSpec[]
-  attachment_requirements AttachmentRequirement[]
-  proposals            Proposal[]
+  // 關聯關係
+  sections     TemplateSection[]
+  proposals    Proposal[]
 
   @@map("proposal_templates")
 }
 
-enum TemplateType {
-  GOVERNMENT_GRANT
-  ENTERPRISE_BID
-  AWARD_APPLICATION
-  CUSTOM
-
-  @@map("template_type")
-}
-
+// 範本章節
 model TemplateSection {
-  id           String           @id @default(cuid())
-  template_id  String
-  section_name String
-  section_order Int
-  is_required  Boolean          @default(false)
-  min_words    Int?
-  max_words    Int?
-  content_hint String?          @db.Text
-  data_types   DataSourceType[]
-  score_weight Decimal?         @db.Decimal(5, 2) // 0-100
-  created_at   DateTime         @default(now())
-  updated_at   DateTime         @updatedAt
+  id              String                @id @default(cuid())
+  template_id     String
+  name            String
+  description     String?
+  display_order   Int
+  is_required     Boolean               @default(true)
+  section_type    SectionType
+  content_hint    String?
+  created_at      DateTime              @default(now())
+  updated_at      DateTime              @updatedAt
 
-  // Relations
-  template          ProposalTemplate  @relation(fields: [template_id], references: [id], onDelete: Cascade)
+  // 關聯關係
+  template        ProposalTemplate      @relation(fields: [template_id], references: [id], onDelete: Cascade)
   proposal_sections ProposalSection[]
 
   @@map("template_sections")
 }
 
-enum DataSourceType {
-  COMPANY_BASIC
-  COMPANY_PROFILE
-  TEAM_MEMBERS
-  PROJECTS
-  AWARDS
-  CAPABILITIES
-  MILESTONES
-  FUTURE_PLANS
-  CUSTOM_INPUT
-
-  @@map("data_source_type")
-}
-
-model FormatSpec {
-  id                   String   @id @default(cuid())
-  template_id          String
-  page_size            String?  @default("A4")
-  margins              Json?    // {top, right, bottom, left}
-  font_family          String?  @default("Arial")
-  font_size            Int?     @default(12)
-  line_height          Decimal? @db.Decimal(3, 1) @default(1.5)
-  max_pages            Int?
-  other_requirements   Json?
-  created_at           DateTime @default(now())
-  updated_at           DateTime @updatedAt
-
-  // Relations
-  template ProposalTemplate @relation(fields: [template_id], references: [id], onDelete: Cascade)
-
-  @@unique([template_id])
-  @@map("format_specs")
-}
-
-model AttachmentRequirement {
-  id              String   @id @default(cuid())
-  template_id     String
-  attachment_name String
-  description     String?  @db.Text
-  is_required     Boolean  @default(false)
-  file_format     String?
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
-
-  // Relations
-  template ProposalTemplate @relation(fields: [template_id], references: [id], onDelete: Cascade)
-
-  @@map("attachment_requirements")
-}
-
-// 標書內容系統
+// 標書項目
 model Proposal {
-  id                   String            @id @default(cuid())
-  proposal_name        String
-  template_id          String
-  company_id           String
-  status               ProposalStatus    @default(DRAFT)
-  created_by           String
-  last_edited_by       String
-  word_count           Int               @default(0)
-  generated_with_ai    Boolean           @default(false)
-  ai_generation_prompt String?           @db.Text
-  created_at           DateTime          @default(now())
-  updated_at           DateTime          @updatedAt
+  id           String    @id @default(cuid())
+  user_id      String
+  company_id   String
+  template_id  String?
+  title        String
+  client_name  String?
+  deadline     DateTime?
+  status       ProposalStatus @default(DRAFT)
+  total_pages  Int?
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+  version      Int       @default(1)
 
-  // Relations
-  template           ProposalTemplate     @relation(fields: [template_id], references: [id])
-  company            Company              @relation(fields: [company_id], references: [id])
-  creator            User                 @relation("ProposalCreator", fields: [created_by], references: [id])
-  last_editor        User                 @relation("ProposalEditor", fields: [last_edited_by], references: [id])
-  sections           ProposalSection[]
-  history            ProposalHistory[]
-  submission         ProposalSubmission?
+  // 關聯關係
+  user         User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  company      Company            @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  template     ProposalTemplate?  @relation(fields: [template_id], references: [id])
+  sections     ProposalSection[]
+  versions     ProposalVersion[]
 
   @@map("proposals")
+}
+
+// 標書章節內容
+model ProposalSection {
+  id                  String           @id @default(cuid())
+  proposal_id         String
+  template_section_id String?
+  name                String
+  content             String           // 存儲為富文本 JSON
+  display_order       Int
+  word_count          Int?
+  is_completed        Boolean          @default(false)
+  created_at          DateTime         @default(now())
+  updated_at          DateTime         @updatedAt
+
+  // 關聯關係
+  proposal         Proposal         @relation(fields: [proposal_id], references: [id], onDelete: Cascade)
+  template_section TemplateSection? @relation(fields: [template_section_id], references: [id])
+
+  @@map("proposal_sections")
+}
+
+// 標書版本管理
+model ProposalVersion {
+  id           String   @id @default(cuid())
+  proposal_id  String
+  version      Int
+  content      String   // 完整標書內容的 JSON
+  changes      String?  // 變更記錄
+  created_by   String
+  created_at   DateTime @default(now())
+
+  // 關聯關係
+  proposal Proposal @relation(fields: [proposal_id], references: [id], onDelete: Cascade)
+
+  @@unique([proposal_id, version])
+  @@map("proposal_versions")
+}
+
+// 審計日誌
+model AuditLog {
+  id         String   @id @default(cuid())
+  user_id    String?
+  action     String
+  table_name String
+  record_id  String?
+  old_values String?  // JSON
+  new_values String?  // JSON
+  created_at DateTime @default(now())
+  ip_address String?
+  user_agent String?
+
+  // 關聯關係
+  user User? @relation(fields: [user_id], references: [id])
+
+  @@map("audit_logs")
+}
+
+// 枚舉定義
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum AwardType {
+  GOVERNMENT
+  INDUSTRY
+  CERTIFICATION
+  PATENT
+  OTHER
+}
+
+enum SectionType {
+  COMPANY_PROFILE
+  TECHNICAL_CAPABILITY
+  PROJECT_EXPERIENCE
+  TEAM_INTRODUCTION
+  PROPOSAL_CONTENT
+  BUDGET_PLAN
+  TIMELINE
+  OTHER
 }
 
 enum ProposalStatus {
@@ -353,106 +338,5 @@ enum ProposalStatus {
   IN_REVIEW
   COMPLETED
   SUBMITTED
-
-  @@map("proposal_status")
-}
-
-model ProposalSection {
-  id                  String   @id @default(cuid())
-  proposal_id         String
-  section_id          String
-  content             String   @db.Text
-  word_count          Int      @default(0)
-  is_ai_generated     Boolean  @default(false)
-  ai_confidence_score Decimal? @db.Decimal(3, 2) // 0.00-1.00
-  section_order       Int
-  created_at          DateTime @default(now())
-  updated_at          DateTime @updatedAt
-
-  // Relations
-  proposal Proposal        @relation(fields: [proposal_id], references: [id], onDelete: Cascade)
-  section  TemplateSection @relation(fields: [section_id], references: [id])
-
-  @@unique([proposal_id, section_id])
-  @@map("proposal_sections")
-}
-
-model ProposalHistory {
-  id             String   @id @default(cuid())
-  proposal_id    String
-  version_number Int
-  content        Json     // Complete proposal snapshot
-  created_by     String
-  created_at     DateTime @default(now())
-
-  // Relations
-  proposal Proposal @relation(fields: [proposal_id], references: [id], onDelete: Cascade)
-  creator  User     @relation("HistoryCreator", fields: [created_by], references: [id])
-
-  @@unique([proposal_id, version_number])
-  @@map("proposal_history")
-}
-
-model ProposalSubmission {
-  id                 String   @id @default(cuid())
-  proposal_id        String   @unique
-  proposal_name      String
-  submission_date    DateTime? @db.Date
-  result             SubmissionResult?
-  award_amount       Decimal?  @db.Decimal(15, 2)
-  feedback           String?   @db.Text
-  is_success         Boolean?
-  created_project_id String?   @unique
-  created_award_id   String?   @unique
-  created_at         DateTime  @default(now())
-  updated_at         DateTime  @updatedAt
-
-  // Relations
-  proposal        Proposal @relation(fields: [proposal_id], references: [id], onDelete: Cascade)
-  created_project Project? @relation("CreatedFromProject", fields: [created_project_id], references: [id])
-  created_award   Award?   @relation("CreatedFromAward", fields: [created_award_id], references: [id])
-
-  @@map("proposal_submissions")
-}
-
-enum SubmissionResult {
-  PENDING
-  WON
-  LOST
-
-  @@map("submission_result")
-}
-
-// 審計日誌系統
-model AuditLog {
-  id          String      @id @default(cuid())
-  table_name  String
-  record_id   String
-  action      AuditAction
-  old_values  Json?
-  new_values  Json?
-  changed_by  String
-  changed_at  DateTime    @default(now())
-  ip_address  String?
-  user_agent  String?
-
-  // Relations
-  user User @relation("AuditUser", fields: [changed_by], references: [id])
-
-  @@index([table_name, record_id])
-  @@index([changed_by])
-  @@index([changed_at])
-  @@map("audit_logs")
-}
-
-enum AuditAction {
-  CREATE
-  UPDATE
-  DELETE
-  LOGIN
-  LOGOUT
-  EXPORT
-  GENERATE
-
-  @@map("audit_action")
+  ARCHIVED
 }

@@ -411,8 +411,8 @@ async function generateBatchExportFiles(params: {
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
     };
   } else {
-    const downloadUrls = [];
-    const filenames = [];
+    const downloadUrls: string[] = [];
+    const filenames: string[] = [];
     let totalSize = 0;
 
     for (const proposal of params.proposals) {
