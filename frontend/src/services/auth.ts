@@ -47,9 +47,9 @@ export const useAuthStore = create<AuthState>()(
           })
           
           toast.success('登入成功！')
-        } catch (error: any) {
+        } catch (error: unknown) {
           set({ isLoading: false })
-          const message = error.response?.data?.message || '登入失敗，請檢查帳號密碼'
+          const message = (error as any).response?.data?.message || '登入失敗，請檢查帳號密碼'
           toast.error(message)
           throw error
         }
@@ -69,9 +69,9 @@ export const useAuthStore = create<AuthState>()(
           })
           
           toast.success('註冊成功！歡迎使用智能標書產生器')
-        } catch (error: any) {
+        } catch (error: unknown) {
           set({ isLoading: false })
-          const message = error.response?.data?.message || '註冊失敗，請稍後再試'
+          const message = (error as any).response?.data?.message || '註冊失敗，請稍後再試'
           toast.error(message)
           throw error
         }

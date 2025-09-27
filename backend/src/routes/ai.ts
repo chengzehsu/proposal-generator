@@ -86,7 +86,7 @@ router.post('/generate', authenticateToken, requireCompanyAccess, async (req, re
       }
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
         error: 'Validation Error',
@@ -147,7 +147,7 @@ router.post('/improve', authenticateToken, requireCompanyAccess, async (req, res
       }
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
         error: 'Validation Error',
@@ -205,7 +205,7 @@ router.post('/translate', authenticateToken, requireCompanyAccess, async (req, r
       }
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
         error: 'Validation Error',
@@ -264,7 +264,7 @@ router.post('/extract-requirements', authenticateToken, requireCompanyAccess, as
       }
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
         error: 'Validation Error',
@@ -310,7 +310,7 @@ router.get('/usage', authenticateToken, requireCompanyAccess, async (req, res) =
 
     res.json(mockUsageStats);
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Get AI usage failed', { error, userId: req.userId });
     res.status(500).json({
       error: 'Internal Server Error',

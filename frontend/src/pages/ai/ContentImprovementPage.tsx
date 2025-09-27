@@ -302,7 +302,7 @@ const ContentImprovementPage: React.FC = () => {
                     variant="outlined"
                     onClick={() => {
                       // TODO: 實現儲存到標書的功能
-                      toast.info('此功能即將推出')
+                      toast('此功能即將推出')
                     }}
                   >
                     儲存到標書
@@ -361,7 +361,7 @@ const ContentImprovementPage: React.FC = () => {
                       startIcon={<ThumbDown />}
                       onClick={() => {
                         // TODO: 實現評價功能
-                        toast.info('感謝您的回饋，我們會持續改進')
+                        toast('感謝您的回饋，我們會持續改進')
                       }}
                     >
                       需要改進

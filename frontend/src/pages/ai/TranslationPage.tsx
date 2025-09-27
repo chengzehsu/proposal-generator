@@ -122,7 +122,7 @@ const TranslationPage: React.FC = () => {
       utterance.lang = language === 'zh' ? 'zh-TW' : language
       speechSynthesis.speak(utterance)
     } else {
-      toast.info('您的瀏覽器不支援語音播放功能')
+      toast('您的瀏覽器不支援語音播放功能')
     }
   }
 
@@ -337,7 +337,7 @@ const TranslationPage: React.FC = () => {
                       variant="outlined"
                       onClick={() => {
                         // TODO: 實現儲存功能
-                        toast.info('此功能即將推出')
+                        toast('此功能即將推出')
                       }}
                     >
                       儲存翻譯

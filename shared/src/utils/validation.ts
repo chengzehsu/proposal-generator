@@ -2,7 +2,7 @@
  * 驗證工具函式
  */
 
-import { TEXT_LIMITS } from '../constants';
+import { TEXT_LIMITS, UPLOAD_LIMITS } from '../constants';
 
 // 電子郵件驗證
 export const isValidEmail = (email: string): boolean => {
@@ -18,7 +18,11 @@ export const isValidTaxId = (taxId: string): boolean => {
   let sum = 0;
   
   for (let i = 0; i < 8; i++) {
-    let product = parseInt(taxId[i]) * weights[i];
+    const digit = taxId[i];
+    const weight = weights[i];
+    if (!digit || weight === undefined) continue;
+    
+    let product = parseInt(digit) * weight;
     sum += Math.floor(product / 10) + (product % 10);
   }
   
@@ -85,7 +89,7 @@ export const validateTextLength = (
         error: `${fieldName} 必須為 ${limits.LENGTH} 個字元`,
       };
     }
-  } else {
+  } else if ('MIN' in limits) {
     if (text.length < limits.MIN) {
       return {
         isValid: false,
@@ -116,7 +120,7 @@ export const isValidDateRange = (startDate: Date, endDate: Date): boolean => {
 
 // 檔案類型驗證
 export const isValidFileType = (mimeType: string): boolean => {
-  return TEXT_LIMITS.UPLOAD_LIMITS?.ALLOWED_MIME_TYPES?.includes(mimeType) || false;
+  return (UPLOAD_LIMITS.ALLOWED_MIME_TYPES as readonly string[]).includes(mimeType);
 };
 
 // 批次驗證

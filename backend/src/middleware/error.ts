@@ -82,7 +82,16 @@ export const errorHandler = (
   });
 
   // Don't expose internal errors in production
-  const response: any = {
+  interface ErrorResponse {
+    error: string;
+    message: string;
+    statusCode: number;
+    details?: unknown;
+    timestamp?: string;
+    stack?: string;
+  }
+  
+  const response: ErrorResponse = {
     error: err.name || 'Error',
     message: statusCode === 500 && process.env.NODE_ENV === 'production' 
       ? 'Something went wrong' 

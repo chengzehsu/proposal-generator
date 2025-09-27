@@ -11,7 +11,7 @@
       "environment": {
         "NODE_ENV": "production"
       },
-      "domains": ["api.proposal-generator.app"],
+      "domains": ["api.proposal-generator.zeabur.app"],
       "healthCheck": {
         "path": "/health",
         "interval": 30
@@ -22,7 +22,7 @@
       "type": "static",
       "buildCommand": "npm run build:shared && npm run build:frontend",
       "outputDirectory": "frontend/dist",
-      "domains": ["proposal-generator.app"],
+      "domains": ["proposal-generator.zeabur.app"],
       "spa": true
     },
     "database": {
@@ -33,7 +33,7 @@
   },
   "networking": {
     "cors": {
-      "allowedOrigins": ["https://proposal-generator.app"],
+      "allowedOrigins": ["https://proposal-generator.zeabur.app"],
       "allowedMethods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       "allowedHeaders": ["Content-Type", "Authorization"]
     }

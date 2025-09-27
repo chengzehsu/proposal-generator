@@ -11,7 +11,7 @@ export const isFileSizeValid = (fileSize: number): boolean => {
 
 // 檢查檔案類型
 export const isFileTypeAllowed = (mimeType: string): boolean => {
-  return UPLOAD_LIMITS.ALLOWED_MIME_TYPES.includes(mimeType);
+  return (UPLOAD_LIMITS.ALLOWED_MIME_TYPES as readonly string[]).includes(mimeType);
 };
 
 // 獲取檔案擴展名
@@ -75,6 +75,8 @@ export const validateFiles = (files: FileList): {
   
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
+    if (!file) continue;
+    
     const validation = validateFile(file);
     
     if (validation.isValid) {
@@ -104,13 +106,14 @@ export const fileToBase64 = (file: File): Promise<string> => {
         reject(new Error('Failed to convert file to base64'));
       }
     };
-    reader.onerror = error => reject(error);
+    reader.onerror = (error: ProgressEvent<FileReader>) => reject(new Error('檔案讀取失敗'));
   });
 };
 
 // Base64 轉換為 Blob
 export const base64ToBlob = (base64: string, mimeType: string): Blob => {
-  const byteCharacters = atob(base64.split(',')[1]);
+  const base64Data = base64.split(',')[1] || base64;
+  const byteCharacters = atob(base64Data);
   const byteNumbers = new Array(byteCharacters.length);
   
   for (let i = 0; i < byteCharacters.length; i++) {
@@ -141,10 +144,11 @@ export const downloadFromUrl = async (url: string, fileName?: string): Promise<v
   try {
     const response = await fetch(url);
     const blob = await response.blob();
-    const finalFileName = fileName || url.split('/').pop() || 'download';
+    const urlParts = url.split('/');
+    const finalFileName = fileName || urlParts[urlParts.length - 1] || 'download';
     
     downloadFile(blob, finalFileName);
-  } catch (error) {
+  } catch (error: unknown) {
     throw new Error('檔案下載失敗');
   }
 };

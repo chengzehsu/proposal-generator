@@ -387,7 +387,7 @@ const RequirementExtractionPage: React.FC = () => {
                       variant="outlined"
                       onClick={() => {
                         // TODO: 實現儲存功能
-                        toast.info('此功能即將推出')
+                        toast('此功能即將推出')
                       }}
                     >
                       儲存到專案

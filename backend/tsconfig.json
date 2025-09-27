@@ -22,6 +22,8 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "allowSyntheticDefaultImports": true,
+    "composite": true,
+    "incremental": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "resolveJsonModule": true,
@@ -33,12 +35,16 @@
       "@/api/*": ["api/*"],
       "@/middleware/*": ["middleware/*"],
       "@/utils/*": ["utils/*"],
-      "@shared/*": ["../shared/*"]
+      "@shared/*": ["../shared/dist/*"]
     }
   },
   "include": [
-    "src/**/*",
-    "prisma/seed.ts"
+    "src/**/*"
+  ],
+  "references": [
+    {
+      "path": "../shared"
+    }
   ],
   "exclude": [
     "node_modules",
