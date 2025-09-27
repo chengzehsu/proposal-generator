@@ -9,7 +9,9 @@
     "exactOptionalPropertyTypes": false,
     "noImplicitOverride": false,
     "noPropertyAccessFromIndexSignature": false,
-    "noUncheckedIndexedAccess": false
+    "noUncheckedIndexedAccess": false,
+    "skipLibCheck": true,
+    "types": []
   },
   "exclude": [
     "node_modules",

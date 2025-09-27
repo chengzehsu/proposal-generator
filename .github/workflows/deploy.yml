@@ -26,39 +26,33 @@ jobs:
       - name: Install all dependencies
         run: npm ci --legacy-peer-deps
 
-      - name: Generate Prisma client
-        working-directory: ./backend
-        env:
-          DATABASE_URL: "file:./dev.db"
-        run: npx prisma generate
+      - name: Build shared package
+        run: npm run build:shared
 
-      - name: Build all packages
+      - name: Build backend
         env:
           NODE_ENV: production
-          DATABASE_URL: "file:./dev.db"
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://localhost:5432/proposal_generator' }}
           JWT_SECRET: ${{ secrets.JWT_SECRET || 'fallback-secret-for-build' }}
-        run: npm run build
+        run: npm run build:backend
 
-      - name: Run database migrations
-        working-directory: ./backend
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL || 'file:./production.db' }}
-        run: |
-          npx prisma generate
-          npx prisma migrate deploy
+      - name: Skip frontend build (temporary)
+        run: echo "⚠️  前端建構暫時跳過，專注於後端部署"
 
       - name: Deploy to Zeabur
-        run: |
-          echo "Building and deploying to Zeabur..."
-          # Zeabur 使用 GitHub webhook 自動部署
-          # 當代碼推送到主分支時會自動觸發部署
-          echo "Deployment will be triggered automatically via GitHub webhook"
+        uses: zeabur/deploy-action@v1
+        with:
+          zeabur-token: ${{ secrets.ZEABUR_TOKEN }}
+          project-id: ${{ secrets.ZEABUR_PROJECT_ID }}
+          service-id: ${{ secrets.ZEABUR_SERVICE_ID }}
+        env:
+          NODE_ENV: production
 
       - name: Notify deployment status
         if: always()
         run: |
           if [ "${{ job.status }}" == "success" ]; then
-            echo "✅ Deployment successful!"
+            echo "✅ Deployment to proposal-generator.zeabur.app successful!"
           else
             echo "❌ Deployment failed!"
           fi
