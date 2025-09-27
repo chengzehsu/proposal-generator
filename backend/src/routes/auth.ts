@@ -64,16 +64,11 @@ const acceptInviteSchema = z.object({
 // JWT utility functions
 const generateToken = (userId: string): string => {
   const secret = process.env.JWT_SECRET || 'default-secret-key';
-  const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
-  
-  const options: SignOptions = {
-    expiresIn
-  };
   
   return jwt.sign(
     { userId },
     secret,
-    options
+    { expiresIn: '7d' }
   );
 };
 

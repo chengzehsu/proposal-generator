@@ -38,8 +38,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Install dependencies
-        run: npm install --legacy-peer-deps
+      - name: Clean and install dependencies
+        run: |
+          rm -rf node_modules package-lock.json
+          npm cache clean --force || true
+          npm install
 
       - name: Build shared package
         run: npm run build:shared
@@ -105,10 +108,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
 
-      - name: Install all dependencies
-        run: npm ci --legacy-peer-deps
+      - name: Clean and install dependencies
+        run: |
+          rm -rf node_modules package-lock.json
+          npm cache clean --force || true
+          npm install
 
       - name: Build shared package
         run: npm run build:shared
