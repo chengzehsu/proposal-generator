@@ -88,15 +88,15 @@ router.get('/', authenticateToken, requireCompanyAccess, async (req, res) => {
     });
 
     // 格式化回應
-    const formattedAwards = awards.map(award => ({
+    const formattedAwards = awards.map((award: any) => ({
       ...award,
       award_date: award.award_date.toISOString().split('T')[0]
     }));
 
-    res.json(formattedAwards);
+    return res.json(formattedAwards);
   } catch (error) {
     logger.error('Get awards failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '獲取獲獎紀錄列表失敗',
       statusCode: 500
@@ -170,7 +170,7 @@ router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
       award_date: newAward.award_date.toISOString().split('T')[0]
     };
 
-    res.status(201).json(response);
+    return res.status(201).json(response);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -182,7 +182,7 @@ router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
     }
 
     logger.error('Create award failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '新增獲獎紀錄失敗',
       statusCode: 500
@@ -230,10 +230,10 @@ router.get('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
       award_date: award.award_date.toISOString().split('T')[0]
     };
 
-    res.json(response);
+    return res.json(response);
   } catch (error) {
     logger.error('Get award failed', { error, userId: req.userId, awardId: req.params.id });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '獲取獲獎紀錄詳情失敗',
       statusCode: 500
@@ -320,7 +320,7 @@ router.put('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
       award_date: updatedAward.award_date.toISOString().split('T')[0]
     };
 
-    res.json(response);
+    return res.json(response);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -332,7 +332,7 @@ router.put('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
     }
 
     logger.error('Update award failed', { error, userId: req.userId, awardId: req.params.id });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '更新獲獎紀錄失敗',
       statusCode: 500
@@ -371,10 +371,10 @@ router.delete('/:id', authenticateToken, requireCompanyAccess, async (req, res) 
       userId: req.userId 
     });
 
-    res.status(204).send();
+    return res.status(204).send();
   } catch (error) {
     logger.error('Delete award failed', { error, userId: req.userId, awardId: req.params.id });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '刪除獲獎紀錄失敗',
       statusCode: 500

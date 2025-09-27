@@ -74,10 +74,10 @@ router.get('/', authenticateToken, requireCompanyAccess, async (req, res) => {
       }
     });
 
-    res.json(templates);
+    return res.json(templates);
   } catch (error) {
     logger.error('Get templates failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '獲取標書範本列表失敗',
       statusCode: 500
@@ -125,7 +125,7 @@ router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
       userId: req.userId 
     });
 
-    res.status(201).json(newTemplate);
+    return res.status(201).json(newTemplate);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -137,7 +137,7 @@ router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
     }
 
     logger.error('Create template failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '新增標書範本失敗',
       statusCode: 500
@@ -185,10 +185,10 @@ router.get('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
       });
     }
 
-    res.json(template);
+    return res.json(template);
   } catch (error) {
     logger.error('Get template failed', { error, userId: req.userId, templateId: req.params.id });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '獲取標書範本詳情失敗',
       statusCode: 500
@@ -257,7 +257,7 @@ router.put('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
       userId: req.userId 
     });
 
-    res.json(updatedTemplate);
+    return res.json(updatedTemplate);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -269,7 +269,7 @@ router.put('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
     }
 
     logger.error('Update template failed', { error, userId: req.userId, templateId: req.params.id });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '更新標書範本失敗',
       statusCode: 500
@@ -315,7 +315,7 @@ router.delete('/:id', authenticateToken, requireCompanyAccess, async (req, res) 
     }
 
     // 使用事務刪除範本及其章節
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // 先刪除所有章節
       await tx.templateSection.deleteMany({
         where: { template_id: templateId }
@@ -332,10 +332,10 @@ router.delete('/:id', authenticateToken, requireCompanyAccess, async (req, res) 
       userId: req.userId 
     });
 
-    res.status(204).send();
+    return res.status(204).send();
   } catch (error) {
     logger.error('Delete template failed', { error, userId: req.userId, templateId: req.params.id });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '刪除標書範本失敗',
       statusCode: 500

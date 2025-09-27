@@ -123,7 +123,7 @@ router.post('/register', async (req, res) => {
     }
 
     // 使用交易創建公司和用戶
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       // 創建公司
       const newCompany = await tx.company.create({
         data: {
@@ -172,7 +172,7 @@ router.post('/register', async (req, res) => {
       companyId: result.company.id 
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       user: result.user,
       company: result.company,
       token,
@@ -190,7 +190,7 @@ router.post('/register', async (req, res) => {
     }
 
     logger.error('Registration failed', { error });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '註冊失敗，請稍後再試',
       statusCode: 500
@@ -247,7 +247,7 @@ router.post('/login', async (req, res) => {
 
     logger.info('User logged in successfully', { userId: user.id, email });
 
-    res.json({
+    return res.json({
       user: {
         id: user.id,
         email: user.email,
@@ -271,7 +271,7 @@ router.post('/login', async (req, res) => {
     }
 
     logger.error('Login failed', { error });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '登入失敗，請稍後再試',
       statusCode: 500
@@ -285,10 +285,10 @@ router.post('/logout', authenticateToken, async (req, res) => {
     // TODO: 在實際應用中，應該將token加入黑名單或在Redis中管理token狀態
     logger.info('User logged out', { userId: req.userId });
     
-    res.status(204).send();
+    return res.status(204).send();
   } catch (error) {
     logger.error('Logout failed', { error });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '登出失敗',
       statusCode: 500
@@ -329,10 +329,10 @@ router.get('/profile', authenticateToken, async (req, res) => {
       });
     }
 
-    res.json(user);
+    return res.json(user);
   } catch (error) {
     logger.error('Get profile failed', { error });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '獲取用戶資料失敗',
       statusCode: 500
@@ -377,7 +377,7 @@ router.post('/refresh', async (req, res) => {
       const newToken = generateToken(user.id);
       const newRefreshToken = generateRefreshToken(user.id);
 
-      res.json({
+      return res.json({
         token: newToken,
         refresh_token: newRefreshToken
       });
@@ -392,7 +392,7 @@ router.post('/refresh', async (req, res) => {
 
   } catch (error) {
     logger.error('Token refresh failed', { error });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: 'Token刷新失敗',
       statusCode: 500
@@ -428,7 +428,7 @@ router.post('/forgot-password', async (req, res) => {
     // TODO: 在實際應用中，應該發送郵件而不是直接返回token
     logger.info('Password reset requested', { userId: user.id, email });
 
-    res.json({
+    return res.json({
       message: '密碼重設郵件已發送',
       reset_token: process.env.NODE_ENV === 'test' ? resetToken : undefined // 只在測試環境返回token
     });
@@ -444,7 +444,7 @@ router.post('/forgot-password', async (req, res) => {
     }
 
     logger.error('Forgot password failed', { error });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '密碼重設請求失敗',
       statusCode: 500
@@ -472,7 +472,7 @@ router.post('/verify-reset-token', async (req, res) => {
         throw new Error('Invalid token type');
       }
 
-      res.json({
+      return res.json({
         valid: true,
         email: decoded.email
       });
@@ -487,7 +487,7 @@ router.post('/verify-reset-token', async (req, res) => {
 
   } catch (error) {
     logger.error('Verify reset token failed', { error });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '驗證重設token失敗',
       statusCode: 500
@@ -525,7 +525,7 @@ router.post('/reset-password', async (req, res) => {
 
       logger.info('Password reset successful', { userId: decoded.userId });
 
-      res.json({
+      return res.json({
         message: '密碼重設成功'
       });
 
@@ -548,7 +548,7 @@ router.post('/reset-password', async (req, res) => {
     }
 
     logger.error('Reset password failed', { error });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '密碼重設失敗',
       statusCode: 500
@@ -605,7 +605,7 @@ router.post('/invite-user', authenticateToken, async (req, res) => {
     // TODO: 在實際應用中，應該發送邀請郵件
     logger.info('User invited', { email, role, invitedBy: currentUser.id });
 
-    res.json({
+    return res.json({
       message: '邀請已發送',
       invite_token: process.env.NODE_ENV === 'test' ? inviteToken : undefined
     });
@@ -621,7 +621,7 @@ router.post('/invite-user', authenticateToken, async (req, res) => {
     }
 
     logger.error('Invite user failed', { error });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '邀請用戶失敗',
       statusCode: 500
@@ -690,7 +690,7 @@ router.post('/accept-invite', async (req, res) => {
 
       logger.info('User accepted invite', { userId: newUser.id, email: decoded.email });
 
-      res.status(201).json({
+      return res.status(201).json({
         user: newUser,
         token: loginToken,
         refresh_token: refreshToken
@@ -715,7 +715,7 @@ router.post('/accept-invite', async (req, res) => {
     }
 
     logger.error('Accept invite failed', { error });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '接受邀請失敗',
       statusCode: 500

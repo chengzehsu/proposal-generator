@@ -112,16 +112,16 @@ router.get('/', authenticateToken, requireCompanyAccess, async (req, res) => {
     });
 
     // 格式化回應
-    const formattedProposals = proposals.map(proposal => ({
+    const formattedProposals = proposals.map((proposal: any) => ({
       ...proposal,
       estimated_amount: proposal.estimated_amount?.toString(),
       deadline: proposal.deadline?.toISOString().split('T')[0]
     }));
 
-    res.json(formattedProposals);
+    return res.json(formattedProposals);
   } catch (error) {
     logger.error('Get proposals failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '獲取標書列表失敗',
       statusCode: 500
@@ -190,7 +190,7 @@ router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
       deadline: newProposal.deadline?.toISOString().split('T')[0]
     };
 
-    res.status(201).json(response);
+    return res.status(201).json(response);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -202,7 +202,7 @@ router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
     }
 
     logger.error('Create proposal failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '新增標書失敗',
       statusCode: 500
@@ -268,10 +268,10 @@ router.get('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
       deadline: proposal.deadline?.toISOString().split('T')[0]
     };
 
-    res.json(response);
+    return res.json(response);
   } catch (error) {
     logger.error('Get proposal failed', { error, userId: req.userId, proposalId: req.params.id });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '獲取標書詳情失敗',
       statusCode: 500
@@ -339,7 +339,7 @@ router.put('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
       deadline: updatedProposal.deadline?.toISOString().split('T')[0]
     };
 
-    res.json(response);
+    return res.json(response);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -351,7 +351,7 @@ router.put('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
     }
 
     logger.error('Update proposal failed', { error, userId: req.userId, proposalId: req.params.id });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '更新標書失敗',
       statusCode: 500
@@ -410,7 +410,7 @@ router.put('/:id/content', authenticateToken, requireCompanyAccess, async (req, 
       userId: req.userId 
     });
 
-    res.json(updatedProposal);
+    return res.json(updatedProposal);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -422,7 +422,7 @@ router.put('/:id/content', authenticateToken, requireCompanyAccess, async (req, 
     }
 
     logger.error('Update proposal content failed', { error, userId: req.userId, proposalId: req.params.id });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '更新標書內容失敗',
       statusCode: 500
@@ -461,10 +461,10 @@ router.delete('/:id', authenticateToken, requireCompanyAccess, async (req, res) 
       userId: req.userId 
     });
 
-    res.status(204).send();
+    return res.status(204).send();
   } catch (error) {
     logger.error('Delete proposal failed', { error, userId: req.userId, proposalId: req.params.id });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '刪除標書失敗',
       statusCode: 500

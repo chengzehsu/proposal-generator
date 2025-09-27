@@ -101,19 +101,19 @@ router.post('/proposal', authenticateToken, requireCompanyAccess, async (req, re
         description: company?.description,
         established_date: company?.established_date,
         capital: company?.capital,
-        team_members: company?.team_members.map(member => ({
+        team_members: company?.team_members.map((member: any) => ({
           name: member.name,
           title: member.title,
           department: member.department,
           expertise: member.expertise
         })),
-        recent_projects: company?.projects.map(project => ({
+        recent_projects: company?.projects.map((project: any) => ({
           name: project.project_name,
           client: project.client_name,
           description: project.description,
           achievements: project.achievements
         })),
-        awards: company?.awards.map(award => ({
+        awards: company?.awards.map((award: any) => ({
           name: award.award_name,
           organization: award.awarding_organization,
           date: award.award_date,
@@ -138,7 +138,7 @@ router.post('/proposal', authenticateToken, requireCompanyAccess, async (req, re
     });
 
     // 返回生成任務信息
-    res.status(202).json({
+    return res.status(202).json({
       message: '標書生成任務已啟動',
       proposal_id: newProposal.id,
       status: '生成中',
@@ -162,7 +162,7 @@ router.post('/proposal', authenticateToken, requireCompanyAccess, async (req, re
     }
 
     logger.error('Generate proposal failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '標書生成失敗',
       statusCode: 500
@@ -230,7 +230,7 @@ router.post('/section', authenticateToken, requireCompanyAccess, async (req, res
       userId: req.userId 
     });
 
-    res.json({
+    return res.json({
       section_id: section.id,
       section_name: section.section_name,
       content: generatedContent,
@@ -248,7 +248,7 @@ router.post('/section', authenticateToken, requireCompanyAccess, async (req, res
     }
 
     logger.error('Generate section failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '章節生成失敗',
       statusCode: 500
@@ -289,7 +289,7 @@ router.get('/status/:proposalId', authenticateToken, requireCompanyAccess, async
     const totalSections = proposal.template.sections.length;
     const completedSections = Object.keys(content).length;
     
-    const sectionsStatus = proposal.template.sections.map(section => ({
+    const sectionsStatus = proposal.template.sections.map((section: any) => ({
       id: section.id,
       name: section.section_name,
       order: section.section_order,
@@ -297,7 +297,7 @@ router.get('/status/:proposalId', authenticateToken, requireCompanyAccess, async
       has_content: !!content[section.id]
     }));
 
-    res.json({
+    return res.json({
       proposal_id: proposalId,
       total_sections: totalSections,
       completed_sections: completedSections,
@@ -308,7 +308,7 @@ router.get('/status/:proposalId', authenticateToken, requireCompanyAccess, async
 
   } catch (error) {
     logger.error('Get generation status failed', { error, userId: req.userId, proposalId: req.params.proposalId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '獲取生成狀態失敗',
       statusCode: 500
@@ -317,7 +317,7 @@ router.get('/status/:proposalId', authenticateToken, requireCompanyAccess, async
 });
 
 // 模擬AI生成函數（實際應整合Gemini API）
-async function simulateAIGeneration(section: any, context?: any): Promise<string> {
+async function simulateAIGeneration(section: any, context?: Record<string, any>): Promise<string> {
   // 模擬生成延遲
   await new Promise(resolve => setTimeout(resolve, 1000));
   
@@ -325,7 +325,7 @@ async function simulateAIGeneration(section: any, context?: any): Promise<string
 }
 
 // 異步生成完整標書內容
-async function generateProposalContent(proposalId: string, sections: any[], context: any) {
+async function generateProposalContent(proposalId: string, sections: any[], context: Record<string, any>): Promise<void> {
   try {
     const content: Record<string, any> = {};
     

@@ -96,17 +96,17 @@ router.get('/', authenticateToken, requireCompanyAccess, async (req, res) => {
     });
 
     // 格式化回應
-    const formattedProjects = projects.map(project => ({
+    const formattedProjects = projects.map((project: any) => ({
       ...project,
       amount: project.amount?.toString(),
       start_date: project.start_date?.toISOString().split('T')[0],
       end_date: project.end_date?.toISOString().split('T')[0]
     }));
 
-    res.json(formattedProjects);
+    return res.json(formattedProjects);
   } catch (error) {
     logger.error('Get projects failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '獲取專案列表失敗',
       statusCode: 500
@@ -171,7 +171,7 @@ router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
       end_date: newProject.end_date?.toISOString().split('T')[0]
     };
 
-    res.status(201).json(response);
+    return res.status(201).json(response);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -183,7 +183,7 @@ router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
     }
 
     logger.error('Create project failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '新增專案失敗',
       statusCode: 500
@@ -235,10 +235,10 @@ router.get('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
       end_date: project.end_date?.toISOString().split('T')[0]
     };
 
-    res.json(response);
+    return res.json(response);
   } catch (error) {
     logger.error('Get project failed', { error, userId: req.userId, projectId: req.params.id });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '獲取專案詳情失敗',
       statusCode: 500
@@ -325,7 +325,7 @@ router.put('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
       end_date: updatedProject.end_date?.toISOString().split('T')[0]
     };
 
-    res.json(response);
+    return res.json(response);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -337,7 +337,7 @@ router.put('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
     }
 
     logger.error('Update project failed', { error, userId: req.userId, projectId: req.params.id });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '更新專案失敗',
       statusCode: 500
@@ -376,10 +376,10 @@ router.delete('/:id', authenticateToken, requireCompanyAccess, async (req, res) 
       userId: req.userId 
     });
 
-    res.status(204).send();
+    return res.status(204).send();
   } catch (error) {
     logger.error('Delete project failed', { error, userId: req.userId, projectId: req.params.id });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '刪除專案失敗',
       statusCode: 500

@@ -93,7 +93,7 @@ router.post('/proposal', authenticateToken, requireCompanyAccess, async (req, re
       fileSize: exportResult.fileSize
     });
 
-    res.json({
+    return res.json({
       download_url: exportResult.downloadUrl,
       filename: exportResult.filename,
       format: validatedData.format,
@@ -118,7 +118,7 @@ router.post('/proposal', authenticateToken, requireCompanyAccess, async (req, re
     }
 
     logger.error('Export proposal failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '標書匯出失敗',
       statusCode: 500
@@ -165,7 +165,7 @@ router.post('/template', authenticateToken, requireCompanyAccess, async (req, re
       userId: req.userId
     });
 
-    res.json({
+    return res.json({
       download_url: exportResult.downloadUrl,
       filename: exportResult.filename,
       format: validatedData.format,
@@ -190,7 +190,7 @@ router.post('/template', authenticateToken, requireCompanyAccess, async (req, re
     }
 
     logger.error('Export template failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '範本匯出失敗',
       statusCode: 500
@@ -229,7 +229,7 @@ router.post('/batch', authenticateToken, requireCompanyAccess, async (req, res) 
     }
 
     // 檢查標書是否有內容
-    const proposalsWithContent = proposals.filter(proposal => {
+    const proposalsWithContent = proposals.filter((proposal: any) => {
       const content = proposal.content as Record<string, any> || {};
       return Object.keys(content).length > 0;
     });
@@ -256,7 +256,7 @@ router.post('/batch', authenticateToken, requireCompanyAccess, async (req, res) 
       userId: req.userId
     });
 
-    res.json({
+    return res.json({
       download_urls: exportResult.downloadUrls,
       filenames: exportResult.filenames,
       format: validatedData.format,
@@ -281,7 +281,7 @@ router.post('/batch', authenticateToken, requireCompanyAccess, async (req, res) 
     }
 
     logger.error('Batch export failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '批次匯出失敗',
       statusCode: 500
@@ -308,7 +308,7 @@ router.get('/history', authenticateToken, requireCompanyAccess, async (req, res)
       expires_at: new Date(Date.now() + 7 * 86400000).toISOString()
     }));
 
-    res.json({
+    return res.json({
       exports: mockHistory,
       pagination: {
         current_page: pageNum,
@@ -320,7 +320,7 @@ router.get('/history', authenticateToken, requireCompanyAccess, async (req, res)
 
   } catch (error) {
     logger.error('Get export history failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '獲取匯出歷史失敗',
       statusCode: 500
@@ -339,11 +339,11 @@ router.delete('/:exportId', authenticateToken, requireCompanyAccess, async (req,
       userId: req.userId 
     });
 
-    res.status(204).send();
+    return res.status(204).send();
 
   } catch (error) {
     logger.error('Delete export failed', { error, userId: req.userId, exportId: req.params.exportId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '刪除匯出檔案失敗',
       statusCode: 500
@@ -355,8 +355,14 @@ router.delete('/:exportId', authenticateToken, requireCompanyAccess, async (req,
 async function generateExportFile(params: {
   proposal: any;
   format: string;
-  options: any;
-}): Promise<any> {
+  options: Record<string, any>;
+}): Promise<{
+  downloadUrl: string;
+  filename: string;
+  fileSize: number;
+  pageCount: number;
+  expiresAt: string;
+}> {
   // 模擬檔案生成
   await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -377,7 +383,12 @@ async function generateTemplateExportFile(params: {
   template: any;
   format: string;
   includeSampleContent: boolean;
-}): Promise<any> {
+}): Promise<{
+  downloadUrl: string;
+  filename: string;
+  fileSize: number;
+  expiresAt: string;
+}> {
   await new Promise(resolve => setTimeout(resolve, 1500));
 
   const fileExtensions = { pdf: 'pdf', docx: 'docx', odt: 'odt' };
@@ -396,7 +407,13 @@ async function generateBatchExportFiles(params: {
   proposals: any[];
   format: string;
   mergeIntoSingle: boolean;
-}): Promise<any> {
+}): Promise<{
+  downloadUrls: string[];
+  filenames: string[];
+  totalFiles: number;
+  totalSize: number;
+  expiresAt: string;
+}> {
   await new Promise(resolve => setTimeout(resolve, 3000));
 
   const fileExtensions = { pdf: 'pdf', docx: 'docx', odt: 'odt' };

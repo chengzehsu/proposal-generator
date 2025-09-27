@@ -31,16 +31,16 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Log database events
-prisma.$on('error', (e) => {
+prisma.$on('error', (e: any) => {
   logger.error('Database error', { error: e });
 });
 
-prisma.$on('warn', (e) => {
+prisma.$on('warn', (e: any) => {
   logger.warn('Database warning', { warning: e });
 });
 
 if (process.env.NODE_ENV === 'development') {
-  prisma.$on('query', (e) => {
+  prisma.$on('query', (e: any) => {
     logger.debug('Database query', {
       query: e.query,
       params: e.params,
@@ -48,7 +48,7 @@ if (process.env.NODE_ENV === 'development') {
     });
   });
 
-  prisma.$on('info', (e) => {
+  prisma.$on('info', (e: any) => {
     logger.info('Database info', { info: e });
   });
 }

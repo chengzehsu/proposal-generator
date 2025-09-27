@@ -55,10 +55,10 @@ router.get('/basic', authenticateToken, requireCompanyAccess, async (req, res) =
       established_date: company.established_date?.toISOString().split('T')[0]
     };
 
-    res.json(response);
+    return res.json(response);
   } catch (error) {
     logger.error('Get company basic data failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '獲取公司基本資料失敗',
       statusCode: 500
@@ -159,7 +159,7 @@ router.put('/basic', authenticateToken, requireCompanyAccess, async (req, res) =
       established_date: updatedCompany.established_date?.toISOString().split('T')[0]
     };
 
-    res.json(response);
+    return res.json(response);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -171,7 +171,7 @@ router.put('/basic', authenticateToken, requireCompanyAccess, async (req, res) =
     }
 
     logger.error('Update company basic data failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '更新公司基本資料失敗',
       statusCode: 500

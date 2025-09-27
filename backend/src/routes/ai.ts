@@ -77,7 +77,7 @@ router.post('/generate', authenticateToken, requireCompanyAccess, async (req, re
       generated_length: generatedContent.length
     });
 
-    res.json({
+    return res.json({
       content: generatedContent,
       metadata: {
         section_type: validatedData.section_type,
@@ -97,7 +97,7 @@ router.post('/generate', authenticateToken, requireCompanyAccess, async (req, re
     }
 
     logger.error('AI generate content failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: 'AI內容生成失敗',
       statusCode: 500
@@ -137,7 +137,7 @@ router.post('/improve', authenticateToken, requireCompanyAccess, async (req, res
       improved_length: improvedContent.length
     });
 
-    res.json({
+    return res.json({
       original_content: validatedData.content,
       improved_content: improvedContent,
       improvement_type: validatedData.improvement_type,
@@ -158,7 +158,7 @@ router.post('/improve', authenticateToken, requireCompanyAccess, async (req, res
     }
 
     logger.error('AI improve content failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: 'AI內容改善失敗',
       statusCode: 500
@@ -194,7 +194,7 @@ router.post('/translate', authenticateToken, requireCompanyAccess, async (req, r
       translated_length: translatedContent.length
     });
 
-    res.json({
+    return res.json({
       original_content: validatedData.content,
       translated_content: translatedContent,
       source_language: '繁體中文',
@@ -216,7 +216,7 @@ router.post('/translate', authenticateToken, requireCompanyAccess, async (req, r
     }
 
     logger.error('AI translate content failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: 'AI翻譯失敗',
       statusCode: 500
@@ -255,7 +255,7 @@ router.post('/extract-requirements', authenticateToken, requireCompanyAccess, as
       rfp_length: validatedData.rfp_content.length
     });
 
-    res.json({
+    return res.json({
       extracted_requirements: extractedRequirements,
       sections_extracted: validatedData.extract_sections,
       metadata: {
@@ -275,7 +275,7 @@ router.post('/extract-requirements', authenticateToken, requireCompanyAccess, as
     }
 
     logger.error('AI extract requirements failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: 'AI需求提取失敗',
       statusCode: 500
@@ -308,11 +308,11 @@ router.get('/usage', authenticateToken, requireCompanyAccess, async (req, res) =
       }
     };
 
-    res.json(mockUsageStats);
+    return res.json(mockUsageStats);
 
   } catch (error: unknown) {
     logger.error('Get AI usage failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '獲取AI使用統計失敗',
       statusCode: 500
@@ -336,10 +336,10 @@ function buildSystemPrompt(sectionType?: string): string {
     '其他': '請根據具體需求提供專業的內容建議。'
   };
 
-  return `${basePrompt} ${sectionPrompts[sectionType]}`;
+  return `${basePrompt} ${sectionPrompts[sectionType as keyof typeof sectionPrompts]}`;
 }
 
-function buildContextPrompt(company: any, additionalContext?: any): string {
+function buildContextPrompt(company: any, additionalContext?: Record<string, any>): string {
   let context = '';
   
   if (company) {

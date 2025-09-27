@@ -79,10 +79,10 @@ router.get('/', authenticateToken, requireCompanyAccess, async (req, res) => {
       }
     });
 
-    res.json(sections);
+    return res.json(sections);
   } catch (error) {
     logger.error('Get sections failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '獲取範本章節列表失敗',
       statusCode: 500
@@ -147,7 +147,7 @@ router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
       userId: req.userId 
     });
 
-    res.status(201).json(newSection);
+    return res.status(201).json(newSection);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -159,7 +159,7 @@ router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
     }
 
     logger.error('Create section failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '新增範本章節失敗',
       statusCode: 500
@@ -206,10 +206,10 @@ router.get('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
       });
     }
 
-    res.json(section);
+    return res.json(section);
   } catch (error) {
     logger.error('Get section failed', { error, userId: req.userId, sectionId: req.params.id });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '獲取範本章節詳情失敗',
       statusCode: 500
@@ -288,7 +288,7 @@ router.put('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
       userId: req.userId 
     });
 
-    res.json(updatedSection);
+    return res.json(updatedSection);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -300,7 +300,7 @@ router.put('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
     }
 
     logger.error('Update section failed', { error, userId: req.userId, sectionId: req.params.id });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '更新範本章節失敗',
       statusCode: 500
@@ -341,10 +341,10 @@ router.delete('/:id', authenticateToken, requireCompanyAccess, async (req, res) 
       userId: req.userId 
     });
 
-    res.status(204).send();
+    return res.status(204).send();
   } catch (error) {
     logger.error('Delete section failed', { error, userId: req.userId, sectionId: req.params.id });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '刪除範本章節失敗',
       statusCode: 500

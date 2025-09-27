@@ -67,10 +67,10 @@ router.get('/', authenticateToken, requireCompanyAccess, async (req, res) => {
       }
     });
 
-    res.json(teamMembers);
+    return res.json(teamMembers);
   } catch (error) {
     logger.error('Get team members failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '獲取團隊成員列表失敗',
       statusCode: 500
@@ -139,7 +139,7 @@ router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
       userId: req.userId 
     });
 
-    res.status(201).json(newMember);
+    return res.status(201).json(newMember);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -151,7 +151,7 @@ router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
     }
 
     logger.error('Create team member failed', { error, userId: req.userId });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '新增團隊成員失敗',
       statusCode: 500
@@ -232,7 +232,7 @@ router.put('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
       userId: req.userId 
     });
 
-    res.json(updatedMember);
+    return res.json(updatedMember);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -244,7 +244,7 @@ router.put('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
     }
 
     logger.error('Update team member failed', { error, userId: req.userId, memberId: req.params.id });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '更新團隊成員失敗',
       statusCode: 500
@@ -285,10 +285,10 @@ router.delete('/:id', authenticateToken, requireCompanyAccess, async (req, res) 
       userId: req.userId 
     });
 
-    res.status(204).send();
+    return res.status(204).send();
   } catch (error) {
     logger.error('Delete team member failed', { error, userId: req.userId, memberId: req.params.id });
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal Server Error',
       message: '刪除團隊成員失敗',
       statusCode: 500
