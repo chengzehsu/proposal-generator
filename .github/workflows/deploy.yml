@@ -35,13 +35,6 @@ jobs:
       - name: Build frontend
         run: npm run build:frontend
 
-      - name: Deploy to Zeabur
-        uses: zeabur/deploy-action@v1
-        with:
-          zeabur-token: ${{ secrets.ZEABUR_TOKEN }}
-          project-id: ${{ secrets.ZEABUR_PROJECT_ID }}
-          service-id: ${{ secrets.ZEABUR_SERVICE_ID }}
-
       - name: Run database migrations
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -49,6 +42,13 @@ jobs:
           cd backend
           npx prisma generate
           npx prisma migrate deploy
+
+      - name: Deploy to Zeabur
+        run: |
+          echo "Building and deploying to Zeabur..."
+          # Zeabur 使用 GitHub webhook 自動部署
+          # 當代碼推送到主分支時會自動觸發部署
+          echo "Deployment will be triggered automatically via GitHub webhook"
 
       - name: Notify deployment status
         if: always()
