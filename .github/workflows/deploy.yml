@@ -35,8 +35,8 @@ jobs:
       - name: Install frontend dependencies
         run: cd frontend && npm install --legacy-peer-deps
 
-      - name: Generate Prisma client
-        run: cd backend && npx prisma generate
+      - name: Install Prisma client and generate
+        run: cd backend && npm install @prisma/client && npx prisma generate
 
       - name: Build shared package
         run: npm run build:shared
