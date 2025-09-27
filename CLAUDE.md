@@ -1,25 +1,28 @@
-# proposal-generator Development Guidelines
+# Proposal Generator Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2025-09-26
+**Note**: This file has been consolidated into the main `/CLAUDE.md` file in the root directory. Please refer to that file for comprehensive project guidance.
+
+## Quick Reference
+
+For detailed development guidelines, project status, and architecture information, see:
+- **Main Documentation**: `/CLAUDE.md` 
+- **Project Status**: `PROJECT_STATUS.md`
+- **Deployment Guide**: `DEPLOYMENT.md`
 
 ## Active Technologies
-- Node.js 18+, React 18, TypeScript 5.0 + React, Express, Prisma, shadcn/ui, Material-UI, TipTap, Gemini AI SDK (001-ai)
+- Node.js 18+, React 18, TypeScript 5.0
+- Express, Prisma, PostgreSQL
+- shadcn/ui, Material-UI, TipTap
+- Gemini AI SDK, Jest, Playwright
 
-## Project Structure
+## Quick Commands
+```bash
+# Backend
+cd backend && npm test && npm run lint
+
+# Frontend  
+cd frontend && npm run dev && npm test
+
+# Shared
+cd shared && npm run build
 ```
-backend/
-frontend/
-tests/
-```
-
-## Commands
-npm test [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNOLOGIES] npm run lint
-
-## Code Style
-Node.js 18+, React 18, TypeScript 5.0: Follow standard conventions
-
-## Recent Changes
-- 001-ai: Added Node.js 18+, React 18, TypeScript 5.0 + React, Express, Prisma, shadcn/ui, Material-UI, TipTap, Gemini AI SDK
-
-<!-- MANUAL ADDITIONS START -->
-<!-- MANUAL ADDITIONS END -->
