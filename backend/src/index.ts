@@ -26,6 +26,9 @@ import proposalRoutes from './routes/proposals';
 import generationRoutes from './routes/generation';
 import aiRoutes from './routes/ai';
 import exportRoutes from './routes/exports';
+import analyticsRoutes from './routes/analytics';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './config/swagger';
 
 const app = express();
 const server = createServer(app);
@@ -43,13 +46,33 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
+// CORS 配置 - 嚴格驗證來源
+const allowedOrigins = process.env.NODE_ENV === 'production'
+  ? [process.env.FRONTEND_URL].filter(Boolean)
+  : ['http://localhost:3000', 'http://localhost:3002', 'http://localhost:3004', 'http://localhost:5173', 'http://localhost:5000'];
+
+if (process.env.NODE_ENV === 'production' && allowedOrigins.length === 0) {
+  throw new Error('CRITICAL: FRONTEND_URL must be configured in production');
+}
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? process.env.FRONTEND_URL 
-    : ['http://localhost:3000', 'http://localhost:5173'],
+  origin: (origin, callback) => {
+    // 允許無 origin 的請求（如 Postman）僅在開發環境
+    if (!origin && process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+
+    if (origin && allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      logger.warn('CORS blocked', { origin, allowedOrigins });
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400 // 24小時預檢快取
 }));
 
 // Rate limiting
@@ -103,6 +126,7 @@ app.get('/api/v1', (req, res) => {
       generation: '/api/v1/generation',
       ai: '/api/v1/ai',
       exports: '/api/v1/exports',
+      analytics: '/api/v1/analytics',
     },
   });
 });
@@ -119,6 +143,19 @@ app.use('/api/v1/proposals', proposalRoutes);
 app.use('/api/v1/generation', generationRoutes);
 app.use('/api/v1/ai', aiRoutes);
 app.use('/api/v1/exports', exportRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);
+
+// Swagger API Documentation
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    explorer: true,
+    swaggerOptions: {
+      docExpansion: 'none',
+      filter: true,
+      showRequestDuration: true
+    }
+  }));
+}
 
 // Error handling
 app.use(notFound);
