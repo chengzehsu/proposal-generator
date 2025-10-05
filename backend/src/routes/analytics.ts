@@ -1,6 +1,7 @@
 import { Request, Response, Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth';
+import { asyncHandler } from '../utils/asyncHandler';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -319,9 +320,9 @@ interface AuthenticatedRequest extends Request {
 }
 
 // GET /api/analytics/:proposalId - 獲取標案分析報告
-router.get('/:proposalId', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+router.get('/:proposalId', authenticateToken, asyncHandler(async (req: Request, res: Response): Promise<void> => {
   try {
-    const { proposalId } = req.params;
+    const proposalId = req.params.proposalId as string;
     const companyId = (req as AuthenticatedRequest).user?.company_id;
 
     if (!companyId) {
@@ -342,13 +343,13 @@ router.get('/:proposalId', authenticateToken, async (req: Request, res: Response
       return;
     }
 
-    // 計算成功率
-    const successAnalysis = await calculateSuccessRate(proposalId, companyId);
+    // 計算成功率 (companyId 已在上方驗證非 undefined)
+    const successAnalysis = await calculateSuccessRate(proposalId, companyId!);
 
-    // 生成最佳實踐建議
+    // 生成最佳實踐建議 (companyId 已在上方驗證非 undefined)
     const bestPractices = await generateBestPractices(
       proposalId,
-      companyId,
+      companyId!,
       successAnalysis.success_rate
     );
 
@@ -365,6 +366,6 @@ router.get('/:proposalId', authenticateToken, async (req: Request, res: Response
     console.error('分析報告生成錯誤:', error);
     res.status(500).json({ error: '分析報告生成失敗' });
   }
-});
+}));
 
 export default router;

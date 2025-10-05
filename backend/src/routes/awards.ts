@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../utils/database';
 import { logger } from '../utils/logger';
 import { authenticateToken, requireCompanyAccess } from '../middleware/auth';
+import { asyncHandler } from '../utils/asyncHandler';
 
 const router = express.Router();
 
@@ -24,7 +25,7 @@ const createAwardSchema = z.object({
 const updateAwardSchema = createAwardSchema.partial();
 
 // GET /api/v1/awards - 獲取獲獎紀錄列表
-router.get('/', authenticateToken, requireCompanyAccess, async (req, res) => {
+router.get('/', authenticateToken, requireCompanyAccess, asyncHandler(async (req, res) => {
   try {
     const { 
       award_level, 
@@ -90,7 +91,7 @@ router.get('/', authenticateToken, requireCompanyAccess, async (req, res) => {
     // 格式化回應
     const formattedAwards = awards.map((award: any) => ({
       ...award,
-      award_date: award.award_date.toISOString().split('T')[0]
+      award_date: award.award_date ? award.award_date.toISOString().split('T')[0] : null
     }));
 
     return res.json(formattedAwards);
@@ -102,10 +103,10 @@ router.get('/', authenticateToken, requireCompanyAccess, async (req, res) => {
       statusCode: 500
     });
   }
-});
+}));
 
 // POST /api/v1/awards - 新增獲獎紀錄
-router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
+router.post('/', authenticateToken, requireCompanyAccess, asyncHandler(async (req, res) => {
   try {
     const validatedData = createAwardSchema.parse(req.body);
 
@@ -138,10 +139,18 @@ router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
 
     const newAward = await prisma.award.create({
       data: {
-        ...validatedData,
+        title: validatedData.award_name,
+        issuer: validatedData.awarding_organization,
+        award_name: validatedData.award_name,
+        awarding_organization: validatedData.awarding_organization,
         award_date: new Date(validatedData.award_date),
         display_order: displayOrder,
-        company_id: req.user!.company_id
+        company_id: req.user!.company_id,
+        is_public: validatedData.is_public ?? true,
+        project_name: validatedData.project_name,
+        description: validatedData.description,
+        award_level: validatedData.award_level,
+        certificate_url: validatedData.certificate_url
       },
       select: {
         id: true,
@@ -167,7 +176,7 @@ router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
     // 格式化回應
     const response = {
       ...newAward,
-      award_date: newAward.award_date.toISOString().split('T')[0]
+      award_date: newAward.award_date ? newAward.award_date.toISOString().split('T')[0] : null
     };
 
     return res.status(201).json(response);
@@ -188,10 +197,10 @@ router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
       statusCode: 500
     });
   }
-});
+}));
 
 // GET /api/v1/awards/:id - 獲取獲獎紀錄詳情
-router.get('/:id', authenticateToken, requireCompanyAccess, async (req, res) => {
+router.get('/:id', authenticateToken, requireCompanyAccess, asyncHandler(async (req, res) => {
   try {
     const awardId = req.params.id;
 
@@ -227,7 +236,7 @@ router.get('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
     // 格式化回應
     const response = {
       ...award,
-      award_date: award.award_date.toISOString().split('T')[0]
+      award_date: award.award_date ? award.award_date.toISOString().split('T')[0] : null
     };
 
     return res.json(response);
@@ -239,10 +248,10 @@ router.get('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
       statusCode: 500
     });
   }
-});
+}));
 
 // PUT /api/v1/awards/:id - 更新獲獎紀錄
-router.put('/:id', authenticateToken, requireCompanyAccess, async (req, res) => {
+router.put('/:id', authenticateToken, requireCompanyAccess, asyncHandler(async (req, res) => {
   try {
     const awardId = req.params.id;
     const validatedData = updateAwardSchema.parse(req.body);
@@ -317,7 +326,7 @@ router.put('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
     // 格式化回應
     const response = {
       ...updatedAward,
-      award_date: updatedAward.award_date.toISOString().split('T')[0]
+      award_date: updatedAward.award_date ? updatedAward.award_date.toISOString().split('T')[0] : null
     };
 
     return res.json(response);
@@ -338,10 +347,10 @@ router.put('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
       statusCode: 500
     });
   }
-});
+}));
 
 // DELETE /api/v1/awards/:id - 刪除獲獎紀錄
-router.delete('/:id', authenticateToken, requireCompanyAccess, async (req, res) => {
+router.delete('/:id', authenticateToken, requireCompanyAccess, asyncHandler(async (req, res) => {
   try {
     const awardId = req.params.id;
 
@@ -380,6 +389,6 @@ router.delete('/:id', authenticateToken, requireCompanyAccess, async (req, res) 
       statusCode: 500
     });
   }
-});
+}));
 
 export default router;

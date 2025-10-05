@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../utils/database';
 import { logger } from '../utils/logger';
 import { authenticateToken, requireCompanyAccess } from '../middleware/auth';
+import { asyncHandler } from '../utils/asyncHandler';
 
 const router = express.Router();
 
@@ -19,8 +20,82 @@ const updateBasicDataSchema = z.object({
   version: z.number().int().min(1, '版本號必須為正整數')
 });
 
+// GET /api/v1/companies - 獲取公司列表（無需認證用於測試）
+router.get('/', async (req, res) => {
+  try {
+    const companies = await prisma.company.findMany({
+      select: {
+        id: true,
+        company_name: true,
+        tax_id: true,
+        address: true,
+        phone: true,
+        email: true,
+        created_at: true
+      }
+    });
+
+    return res.json(companies);
+  } catch (error) {
+    logger.error('Get companies failed', { error });
+    return res.status(500).json({
+      error: 'Internal Server Error',
+      message: '獲取公司列表失敗',
+      statusCode: 500
+    });
+  }
+});
+
+// POST /api/v1/companies - 創建公司（無需認證用於測試）
+router.post('/', async (req, res) => {
+  try {
+    const { name, address, phone, email } = req.body;
+
+    if (!name) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: '公司名稱為必填項',
+        statusCode: 400
+      });
+    }
+
+    // 生成隨機統一編號用於測試
+    const tax_id = Math.floor(10000000 + Math.random() * 90000000).toString();
+
+    // 獲取第一個用戶作為公司所有者
+    const firstUser = await prisma.user.findFirst();
+    if (!firstUser) {
+      return res.status(500).json({
+        error: 'Internal Server Error',
+        message: '系統中無用戶，無法創建公司',
+        statusCode: 500
+      });
+    }
+
+    const company = await prisma.company.create({
+      data: {
+        user_id: firstUser.id,
+        company_name: name,
+        tax_id: tax_id,
+        address: address || '',
+        phone: phone || '',
+        email: email || ''
+      }
+    });
+
+    return res.status(201).json(company);
+  } catch (error) {
+    logger.error('Create company failed', { error });
+    return res.status(500).json({
+      error: 'Internal Server Error',
+      message: '創建公司失敗',
+      statusCode: 500
+    });
+  }
+});
+
 // GET /api/v1/companies/basic - 獲取公司基本資料
-router.get('/basic', authenticateToken, requireCompanyAccess, async (req, res) => {
+router.get('/basic', authenticateToken, requireCompanyAccess, asyncHandler(async (req, res) => {
   try {
     const company = await prisma.company.findUnique({
       where: { id: req.user!.company_id },
@@ -64,7 +139,7 @@ router.get('/basic', authenticateToken, requireCompanyAccess, async (req, res) =
       statusCode: 500
     });
   }
-});
+}));
 
 // PUT /api/v1/companies/basic - 更新公司基本資料
 router.put('/basic', authenticateToken, requireCompanyAccess, async (req, res) => {
@@ -117,6 +192,7 @@ router.put('/basic', authenticateToken, requireCompanyAccess, async (req, res) =
       ...updateData,
       established_date: updateData.established_date ? new Date(updateData.established_date) : undefined,
       website: updateData.website === '' ? null : updateData.website,
+      capital: updateData.capital ? updateData.capital.toString() : undefined,
       version: version + 1 // 版本遞增
     };
 

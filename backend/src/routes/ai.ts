@@ -3,13 +3,15 @@ import { z } from 'zod';
 import { prisma } from '../utils/database';
 import { logger } from '../utils/logger';
 import { authenticateToken, requireCompanyAccess } from '../middleware/auth';
+import { callGeminiAPI } from '../services/gemini';
+import { asyncHandler } from '../utils/asyncHandler';
 
 const router = express.Router();
 
 // Validation schemas
 const generateContentSchema = z.object({
   prompt: z.string().min(10, '提示詞至少需要10個字元').max(2000, '提示詞長度不能超過2000字元'),
-  context: z.record(z.string(), z.any()).optional(),
+  context: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).optional(),
   max_tokens: z.number().int().min(50).max(4000).optional().default(1000),
   temperature: z.number().min(0).max(1).optional().default(0.7),
   section_type: z.enum(['公司介紹', '專案背景', '技術方案', '時程規劃', '預算報價', '團隊介紹', '其他']).optional()
@@ -38,7 +40,7 @@ const extractRequirementsSchema = z.object({
 });
 
 // POST /api/v1/ai/generate - 生成內容
-router.post('/generate', authenticateToken, requireCompanyAccess, async (req, res) => {
+router.post('/generate', authenticateToken, requireCompanyAccess, asyncHandler(async (req, res) => {
   try {
     const validatedData = generateContentSchema.parse(req.body);
 
@@ -103,10 +105,10 @@ router.post('/generate', authenticateToken, requireCompanyAccess, async (req, re
       statusCode: 500
     });
   }
-});
+}));
 
 // POST /api/v1/ai/improve - 改善內容
-router.post('/improve', authenticateToken, requireCompanyAccess, async (req, res) => {
+router.post('/improve', authenticateToken, requireCompanyAccess, asyncHandler(async (req, res) => {
   try {
     const validatedData = improveContentSchema.parse(req.body);
 
@@ -164,10 +166,10 @@ router.post('/improve', authenticateToken, requireCompanyAccess, async (req, res
       statusCode: 500
     });
   }
-});
+}));
 
 // POST /api/v1/ai/translate - 翻譯內容
-router.post('/translate', authenticateToken, requireCompanyAccess, async (req, res) => {
+router.post('/translate', authenticateToken, requireCompanyAccess, asyncHandler(async (req, res) => {
   try {
     const validatedData = translateContentSchema.parse(req.body);
 
@@ -222,10 +224,10 @@ router.post('/translate', authenticateToken, requireCompanyAccess, async (req, r
       statusCode: 500
     });
   }
-});
+}));
 
 // POST /api/v1/ai/extract-requirements - 從RFP提取需求
-router.post('/extract-requirements', authenticateToken, requireCompanyAccess, async (req, res) => {
+router.post('/extract-requirements', authenticateToken, requireCompanyAccess, asyncHandler(async (req, res) => {
   try {
     const validatedData = extractRequirementsSchema.parse(req.body);
 
@@ -281,10 +283,10 @@ router.post('/extract-requirements', authenticateToken, requireCompanyAccess, as
       statusCode: 500
     });
   }
-});
+}));
 
 // GET /api/v1/ai/usage - 獲取AI使用統計
-router.get('/usage', authenticateToken, requireCompanyAccess, async (req, res) => {
+router.get('/usage', authenticateToken, requireCompanyAccess, asyncHandler(async (req, res) => {
   try {
     // 實際應用中應從使用記錄表獲取統計資料
     const mockUsageStats = {
@@ -318,7 +320,7 @@ router.get('/usage', authenticateToken, requireCompanyAccess, async (req, res) =
       statusCode: 500
     });
   }
-});
+}));
 
 // 輔助函數
 function buildSystemPrompt(sectionType?: string): string {
@@ -339,53 +341,46 @@ function buildSystemPrompt(sectionType?: string): string {
   return `${basePrompt} ${sectionPrompts[sectionType as keyof typeof sectionPrompts]}`;
 }
 
-function buildContextPrompt(company: any, additionalContext?: Record<string, any>): string {
+interface CompanyContext {
+  company_name: string;
+  description?: string | null;
+  team_members?: Array<{
+    name: string;
+    title?: string | null;
+  }>;
+  projects?: Array<{
+    project_name: string;
+  }>;
+}
+
+function buildContextPrompt(company: CompanyContext | null, additionalContext?: Record<string, unknown>): string {
   let context = '';
-  
+
   if (company) {
     context += `公司資訊：\n`;
     context += `公司名稱：${company.company_name}\n`;
     if (company.description) context += `公司描述：${company.description}\n`;
-    
-    if (company.team_members?.length > 0) {
+
+    if (company.team_members && company.team_members.length > 0) {
       context += `核心團隊：\n`;
-      company.team_members.forEach((member: any) => {
-        context += `- ${member.name} (${member.title})\n`;
+      company.team_members.forEach((member) => {
+        context += `- ${member.name}${member.title ? ` (${member.title})` : ''}\n`;
       });
     }
-    
-    if (company.projects?.length > 0) {
+
+    if (company.projects && company.projects.length > 0) {
       context += `近期專案：\n`;
-      company.projects.forEach((project: any) => {
+      company.projects.forEach((project) => {
         context += `- ${project.project_name}\n`;
       });
     }
   }
-  
+
   if (additionalContext) {
     context += `\n額外資訊：${JSON.stringify(additionalContext, null, 2)}\n`;
   }
-  
-  return context;
-}
 
-// 模擬Gemini API呼叫（實際應整合真實API）
-async function callGeminiAPI(params: { prompt: string; max_tokens: number; temperature: number }): Promise<string> {
-  // 模擬API延遲
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  // 模擬生成回應
-  const responses = [
-    '根據您的需求，我建議採用以下方案...',
-    '基於提供的資訊，我們可以從以下幾個面向來規劃...',
-    '為了達成您的目標，建議考慮以下要素...',
-    '綜合分析相關條件，提出以下建議...'
-  ];
-  
-  const baseResponse = responses[Math.floor(Math.random() * responses.length)];
-  const mockContent = `${baseResponse}\n\n[這是模擬的AI生成內容，實際應用中會呼叫Gemini API生成真實內容]\n\n生成參數：\n- Max Tokens: ${params.max_tokens}\n- Temperature: ${params.temperature}\n- 生成時間: ${new Date().toISOString()}`;
-  
-  return mockContent;
+  return context;
 }
 
 export default router;

@@ -5,6 +5,9 @@ import { z } from 'zod';
 import { prisma } from '../utils/database';
 import { logger } from '../utils/logger';
 import { authenticateToken } from '../middleware/auth';
+import { RefreshTokenPayload, PasswordResetTokenPayload, InviteTokenPayload } from '../types/jwt';
+import { PrismaTransaction } from '../types/prisma';
+import { asyncHandler } from '../utils/asyncHandler';
 
 const router = express.Router();
 
@@ -85,7 +88,88 @@ const generateRefreshToken = (userId: string): string => {
   );
 };
 
-// POST /api/v1/auth/register - 用戶註冊
+/**
+ * @swagger
+ * /api/v1/auth/register:
+ *   post:
+ *     summary: 用戶註冊
+ *     description: 創建新的用戶帳戶，包括個人和公司資訊
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - name
+ *               - company
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: 用戶電子信箱
+ *               password:
+ *                 type: string
+ *                 description: 密碼，須包含大小寫字母、數字和特殊字元
+ *                 minLength: 8
+ *               name:
+ *                 type: string
+ *                 description: 用戶姓名
+ *               company:
+ *                 type: object
+ *                 required:
+ *                   - company_name
+ *                   - tax_id
+ *                   - address
+ *                   - phone
+ *                   - email
+ *                 properties:
+ *                   company_name:
+ *                     type: string
+ *                     description: 公司名稱
+ *                   tax_id:
+ *                     type: string
+ *                     description: 8位數統一編號
+ *                   address:
+ *                     type: string
+ *                     description: 公司地址
+ *                   phone:
+ *                     type: string
+ *                     description: 公司聯絡電話
+ *                   email:
+ *                     type: string
+ *                     format: email
+ *                     description: 公司電子信箱
+ *     responses:
+ *       201:
+ *         description: 用戶成功註冊
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   description: 用戶基本資訊
+ *                 company:
+ *                   type: object
+ *                   description: 公司基本資訊
+ *                 token:
+ *                   type: string
+ *                   description: JWT存取令牌
+ *                 refresh_token:
+ *                   type: string
+ *                   description: JWT刷新令牌
+ *       400:
+ *         description: 輸入資料格式錯誤
+ *       409:
+ *         description: 電子信箱或統一編號已被使用
+ *       500:
+ *         description: 伺服器內部錯誤
+ */
 router.post('/register', async (req, res) => {
   try {
     const validatedData = registerSchema.parse(req.body);
@@ -117,32 +201,46 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // 使用交易創建公司和用戶
-    const result = await prisma.$transaction(async (tx: any) => {
-      // 創建公司
-      const newCompany = await tx.company.create({
-        data: {
-          company_name: company.company_name,
-          tax_id: company.tax_id,
-          address: company.address,
-          phone: company.phone,
-          email: company.email,
-          capital: company.capital,
-          established_date: company.established_date ? new Date(company.established_date) : undefined,
-          website: company.website || undefined
-        }
-      });
-
-      // 創建用戶（第一個用戶自動成為ADMIN）
+    // 使用交易創建用戶和公司
+    const result = await prisma.$transaction(async (tx: PrismaTransaction) => {
+      // 先創建用戶
       const hashedPassword = await bcrypt.hash(password, 12);
       const newUser = await tx.user.create({
         data: {
           email,
           password: hashedPassword,
           name,
-          role: 'ADMIN', // 第一個用戶自動成為管理員
-          company_id: newCompany.id
+          role: 'ADMIN' // 第一個用戶自動成為管理員
         },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          is_active: true,
+          created_at: true
+        }
+      });
+
+      // 然後創建公司
+      const newCompany = await tx.company.create({
+        data: {
+          user_id: newUser.id,
+          company_name: company.company_name,
+          tax_id: company.tax_id,
+          address: company.address,
+          phone: company.phone,
+          email: company.email,
+          capital: company.capital ? company.capital.toString() : undefined,
+          established_date: company.established_date ? new Date(company.established_date) : undefined,
+          website: company.website || undefined
+        }
+      });
+
+      // 更新用戶的 company_id
+      const updatedUser = await tx.user.update({
+        where: { id: newUser.id },
+        data: { company_id: newCompany.id },
         select: {
           id: true,
           email: true,
@@ -154,7 +252,7 @@ router.post('/register', async (req, res) => {
         }
       });
 
-      return { user: newUser, company: newCompany };
+      return { user: updatedUser, company: newCompany };
     });
 
     // 生成JWT token
@@ -193,7 +291,54 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// POST /api/v1/auth/login - 用戶登入
+/**
+ * @swagger
+ * /api/v1/auth/login:
+ *   post:
+ *     summary: 用戶登入
+ *     description: 使用電子信箱和密碼進行用戶驗證
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: 用戶電子信箱
+ *               password:
+ *                 type: string
+ *                 description: 使用者密碼
+ *     responses:
+ *       200:
+ *         description: 登入成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   description: 用戶基本資訊
+ *                 token:
+ *                   type: string
+ *                   description: JWT存取令牌
+ *                 refresh_token:
+ *                   type: string
+ *                   description: JWT刷新令牌
+ *       400:
+ *         description: 輸入資料格式錯誤
+ *       401:
+ *         description: 帳號或密碼錯誤
+ *       500:
+ *         description: 伺服器內部錯誤
+ */
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = loginSchema.parse(req.body);
@@ -275,7 +420,7 @@ router.post('/login', async (req, res) => {
 });
 
 // POST /api/v1/auth/logout - 用戶登出
-router.post('/logout', authenticateToken, async (req, res) => {
+router.post('/logout', authenticateToken, asyncHandler(async (req, res) => {
   try {
     // TODO: 在實際應用中，應該將token加入黑名單或在Redis中管理token狀態
     logger.info('User logged out', { userId: req.userId });
@@ -289,10 +434,10 @@ router.post('/logout', authenticateToken, async (req, res) => {
       statusCode: 500
     });
   }
-});
+}));
 
 // GET /api/v1/auth/profile - 獲取用戶資料
-router.get('/profile', authenticateToken, async (req, res) => {
+router.get('/profile', authenticateToken, asyncHandler(async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.userId },
@@ -333,7 +478,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
       statusCode: 500
     });
   }
-});
+}));
 
 // POST /api/v1/auth/refresh - 刷新token
 router.post('/refresh', async (req, res) => {
@@ -349,8 +494,8 @@ router.post('/refresh', async (req, res) => {
     }
 
     try {
-      const decoded = jwt.verify(refresh_token, process.env.JWT_REFRESH_SECRET || 'default-refresh-secret') as any;
-      
+      const decoded = jwt.verify(refresh_token, process.env.JWT_REFRESH_SECRET || 'default-refresh-secret') as RefreshTokenPayload;
+
       if (decoded.type !== 'refresh') {
         throw new Error('Invalid token type');
       }
@@ -461,8 +606,8 @@ router.post('/verify-reset-token', async (req, res) => {
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret-key') as any;
-      
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret-key') as PasswordResetTokenPayload;
+
       if (decoded.type !== 'password_reset') {
         throw new Error('Invalid token type');
       }
@@ -505,8 +650,8 @@ router.post('/reset-password', async (req, res) => {
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret-key') as any;
-      
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret-key') as PasswordResetTokenPayload;
+
       if (decoded.type !== 'password_reset') {
         throw new Error('Invalid token type');
       }
@@ -552,7 +697,7 @@ router.post('/reset-password', async (req, res) => {
 });
 
 // POST /api/v1/auth/invite-user - 邀請用戶（需要管理員權限）
-router.post('/invite-user', authenticateToken, async (req, res) => {
+router.post('/invite-user', authenticateToken, asyncHandler(async (req, res) => {
   try {
     // 檢查當前用戶是否為管理員
     const currentUser = await prisma.user.findUnique({
@@ -622,7 +767,7 @@ router.post('/invite-user', authenticateToken, async (req, res) => {
       statusCode: 500
     });
   }
-});
+}));
 
 // POST /api/v1/auth/accept-invite - 接受邀請
 router.post('/accept-invite', async (req, res) => {
@@ -639,8 +784,8 @@ router.post('/accept-invite', async (req, res) => {
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret-key') as any;
-      
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret-key') as InviteTokenPayload;
+
       if (decoded.type !== 'invite') {
         throw new Error('Invalid token type');
       }
