@@ -319,13 +319,14 @@ interface AuthenticatedRequest extends Request {
 }
 
 // GET /api/analytics/:proposalId - 獲取標案分析報告
-router.get('/:proposalId', authenticateToken, async (req: Request, res: Response) => {
+router.get('/:proposalId', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const { proposalId } = req.params;
     const companyId = (req as AuthenticatedRequest).user?.company_id;
 
     if (!companyId) {
-      return res.status(403).json({ error: '用戶未關聯公司' });
+      res.status(403).json({ error: '用戶未關聯公司' });
+      return;
     }
 
     // 驗證標案是否屬於該公司
@@ -337,7 +338,8 @@ router.get('/:proposalId', authenticateToken, async (req: Request, res: Response
     });
 
     if (!proposal) {
-      return res.status(404).json({ error: '標案不存在或無權限訪問' });
+      res.status(404).json({ error: '標案不存在或無權限訪問' });
+      return;
     }
 
     // 計算成功率
