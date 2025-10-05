@@ -32,8 +32,8 @@ async function calculateSuccessRate(proposalId: string, companyId: string) {
       select: { status: true }
     });
 
-    const wonProposals = allProposals.filter(p => p.status === 'won').length;
-    const submittedProposals = allProposals.filter(p =>
+    const wonProposals = allProposals.filter((p: { status: string }) => p.status === 'won').length;
+    const submittedProposals = allProposals.filter((p: { status: string }) =>
       ['submitted', 'won', 'lost'].includes(p.status)
     ).length;
 
@@ -54,7 +54,7 @@ async function calculateSuccessRate(proposalId: string, companyId: string) {
       });
 
       if (similarClientProposals.length > 0) {
-        const clientWonCount = similarClientProposals.filter(p => p.status === 'won').length;
+        const clientWonCount = similarClientProposals.filter((p: { status: string }) => p.status === 'won').length;
         similarClientSuccessRate = (clientWonCount / similarClientProposals.length) * 100;
       }
     }
@@ -73,7 +73,7 @@ async function calculateSuccessRate(proposalId: string, companyId: string) {
       }
     });
 
-    const hasBasicInfo = companyData?.name && companyData?.tax_id && companyData?.address;
+    const hasBasicInfo = companyData?.company_name && companyData?.tax_id && companyData?.address;
     const hasTeamMembers = (companyData?._count.team_members ?? 0) > 0;
     const hasProjects = (companyData?._count.projects ?? 0) > 0;
     const hasAwards = (companyData?._count.awards ?? 0) > 0;
@@ -102,7 +102,7 @@ async function calculateSuccessRate(proposalId: string, companyId: string) {
 
     let recentSuccessRate = 0;
     if (recentProposals.length > 0) {
-      const recentWonCount = recentProposals.filter(p => p.status === 'won').length;
+      const recentWonCount = recentProposals.filter((p: { status: string }) => p.status === 'won').length;
       recentSuccessRate = (recentWonCount / recentProposals.length) * 100;
     }
 
@@ -308,9 +308,13 @@ async function generateBestPractices(proposalId: string, companyId: string, succ
 }
 
 interface AuthenticatedRequest extends Request {
-  user: {
-    userId: string;
-    companyId: string;
+  user?: {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    company_id: string;
+    is_active: boolean;
   };
 }
 
@@ -318,7 +322,11 @@ interface AuthenticatedRequest extends Request {
 router.get('/:proposalId', authenticateToken, async (req: Request, res: Response) => {
   try {
     const { proposalId } = req.params;
-    const companyId = (req as AuthenticatedRequest).user.companyId;
+    const companyId = (req as AuthenticatedRequest).user?.company_id;
+
+    if (!companyId) {
+      return res.status(403).json({ error: '用戶未關聯公司' });
+    }
 
     // 驗證標案是否屬於該公司
     const proposal = await prisma.proposal.findFirst({
