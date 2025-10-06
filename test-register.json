@@ -1,0 +1,12 @@
+{
+  "email": "demo@example.com",
+  "password": "Demo123!@#",
+  "name": "Demo User",
+  "company": {
+    "company_name": "Demo Company",
+    "tax_id": "12345678",
+    "address": "Taipei",
+    "phone": "02-1234-5678",
+    "email": "company@demo.com"
+  }
+}

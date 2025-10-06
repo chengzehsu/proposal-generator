@@ -1,0 +1,84 @@
+{
+  "timestamp": "2025-09-30T00:29:29.034Z",
+  "summary": {
+    "successRate": "100.0",
+    "totalTests": 12,
+    "totalPassed": 12,
+    "apiTests": {
+      "passed": 9,
+      "total": 9
+    },
+    "errorHandling": {
+      "passed": 3,
+      "total": 3
+    },
+    "performance": 2
+  },
+  "details": {
+    "apiTests": [
+      {
+        "name": "後端健康檢查",
+        "status": "pass"
+      },
+      {
+        "name": "API資訊",
+        "status": "pass"
+      },
+      {
+        "name": "用戶註冊",
+        "status": "pass"
+      },
+      {
+        "name": "用戶登入",
+        "status": "pass"
+      },
+      {
+        "name": "公司資料管理",
+        "status": "pass"
+      },
+      {
+        "name": "團隊成員管理",
+        "status": "pass"
+      },
+      {
+        "name": "專案實績管理",
+        "status": "pass"
+      },
+      {
+        "name": "AI內容生成",
+        "status": "pass"
+      },
+      {
+        "name": "範本管理",
+        "status": "pass"
+      }
+    ],
+    "performanceTests": [
+      {
+        "name": "健康檢查",
+        "duration": 1,
+        "status": "pass"
+      },
+      {
+        "name": "API資訊",
+        "duration": 2,
+        "status": "pass"
+      }
+    ],
+    "dataIntegrityTests": [],
+    "errorHandlingTests": [
+      {
+        "name": "無認證訪問",
+        "status": "pass"
+      },
+      {
+        "name": "無效路由",
+        "status": "pass"
+      },
+      {
+        "name": "無效數據",
+        "status": "pass"
+      }
+    ]
+  }
+}

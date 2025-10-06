@@ -19,6 +19,12 @@ export default [
       '**/*.cjs',
       '**/*.d.ts',
       'backend/prisma/migrations/**',
+      'frontend/playwright.config.ts',
+      'frontend/postcss.config.js',
+      'frontend/tailwind.config.js',
+      'frontend/vite.config.ts',
+      'frontend/tests/**/*.{spec,test}.{ts,tsx}',
+      'frontend/tests/helpers/**/*.{ts,tsx}',
     ],
   },
 

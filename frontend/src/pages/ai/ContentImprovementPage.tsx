@@ -59,7 +59,7 @@ const ContentImprovementPage: React.FC = () => {
       toast.success('內容優化完成！')
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || '優化失敗'
+      const message = error.response?.data?.message ?? '優化失敗'
       toast.error(message)
     },
   })

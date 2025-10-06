@@ -67,7 +67,7 @@ const RequirementExtractionPage: React.FC = () => {
       toast.success('需求萃取完成！')
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || '萃取失敗'
+      const message = error.response?.data?.message ?? '萃取失敗'
       toast.error(message)
     },
   })
@@ -399,7 +399,7 @@ const RequirementExtractionPage: React.FC = () => {
                     return (
                       <Chip
                         key={section}
-                        label={sectionInfo?.label || section}
+                        label={sectionInfo?.label ?? section}
                         color="primary"
                         size="small"
                       />

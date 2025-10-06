@@ -49,25 +49,33 @@ class IntegrationTester {
     const registerData = {
       email: `test-${Date.now()}@example.com`,
       password: 'TestPassword123!',
-      companyName: '測試公司'
+      name: '測試用戶',
+      company: {
+        company_name: '智能科技有限公司',
+        tax_id: Math.floor(Math.random() * 90000000 + 10000000).toString(),
+        address: '台北市信義區信義路五段7號',
+        phone: '02-1234-5678',
+        email: `company-${Date.now()}@smarttech.com.tw`,
+        website: 'https://smarttech.com.tw'
+      }
     };
 
-    const registerResponse = await axios.post(`${this.baseURL}/auth/register`, registerData);
+    const registerResponse = await axios.post(`${this.baseURL}/api/v1/auth/register`, registerData);
     if (registerResponse.status !== 201) {
       throw new Error('用戶註冊失敗');
     }
 
     // 測試用戶登入
-    const loginResponse = await axios.post(`${this.baseURL}/auth/login`, {
+    const loginResponse = await axios.post(`${this.baseURL}/api/v1/auth/login`, {
       email: registerData.email,
       password: registerData.password
     });
 
-    if (loginResponse.status !== 200 || !loginResponse.data.data.token) {
+    if (loginResponse.status !== 200 || !loginResponse.data.token) {
       throw new Error('用戶登入失敗');
     }
 
-    this.authToken = loginResponse.data.data.token;
+    this.authToken = loginResponse.data.token;
     this.log('認證流程測試通過');
   }
 
@@ -76,18 +84,23 @@ class IntegrationTester {
 
     const headers = { Authorization: `Bearer ${this.authToken}` };
     
-    // 測試公司基本資料
+    // 先獲取當前公司資料
+    const getResponse = await axios.get(`${this.baseURL}/api/v1/companies/basic`, { headers });
+    if (getResponse.status !== 200) {
+      throw new Error('獲取公司資料失敗');
+    }
+
+    // 測試公司基本資料更新
     const companyData = {
-      name: '智能科技有限公司',
-      taxId: '12345678',
+      company_name: '智能科技有限公司',
       address: '台北市信義區信義路五段7號',
       phone: '02-1234-5678',
       email: 'info@smarttech.com.tw',
       website: 'https://smarttech.com.tw',
-      description: '專業的AI解決方案提供商'
+      version: getResponse.data.version
     };
 
-    const response = await axios.put(`${this.baseURL}/companies/basic`, companyData, { headers });
+    const response = await axios.put(`${this.baseURL}/api/v1/companies/basic`, companyData, { headers });
     if (response.status !== 200) {
       throw new Error('公司資料更新失敗');
     }
@@ -103,14 +116,14 @@ class IntegrationTester {
     // 測試團隊成員新增
     const memberData = {
       name: '張經理',
-      position: '專案經理',
+      title: '專案經理',
       department: '技術部',
-      email: 'zhang@smarttech.com.tw',
-      phone: '02-1234-5679',
-      expertise: ['專案管理', 'AI技術', '系統整合']
+      education: '碩士',
+      experience: '10年相關經驗',
+      expertise: '專案管理、AI技術、系統整合'
     };
 
-    const response = await axios.post(`${this.baseURL}/team-members`, memberData, { headers });
+    const response = await axios.post(`${this.baseURL}/api/v1/team-members`, memberData, { headers });
     if (response.status !== 201) {
       throw new Error('團隊成員新增失敗');
     }
@@ -125,18 +138,17 @@ class IntegrationTester {
     
     // 測試專案實績新增
     const projectData = {
-      name: '智慧城市物聯網平台開發案',
-      client: '台北市政府',
-      startDate: '2023-01-01',
-      endDate: '2023-12-31',
-      budget: 5000000,
+      project_name: '智慧城市物聯網平台開發案',
+      client_name: '台北市政府',
+      start_date: '2023-01-01',
+      end_date: '2023-12-31',
+      amount: 5000000,
       description: '建置涵蓋交通、環境、安全的智慧城市整合平台',
-      technologies: ['IoT', 'AI', '大數據分析', '雲端運算'],
-      teamSize: 15,
-      achievements: ['提升交通效率30%', '降低能耗20%', '提升市民滿意度85%']
+      tags: ['IoT', 'AI', '大數據分析', '雲端運算'],
+      achievements: '提升交通效率30%、降低能耗20%、提升市民滿意度85%'
     };
 
-    const response = await axios.post(`${this.baseURL}/projects`, projectData, { headers });
+    const response = await axios.post(`${this.baseURL}/api/v1/projects`, projectData, { headers });
     if (response.status !== 201) {
       throw new Error('專案實績新增失敗');
     }
@@ -150,12 +162,12 @@ class IntegrationTester {
     const headers = { Authorization: `Bearer ${this.authToken}` };
     
     // 測試範本管理
-    const response = await axios.get(`${this.baseURL}/templates`, { headers });
+    const response = await axios.get(`${this.baseURL}/api/v1/templates`, { headers });
     if (response.status !== 200) {
       throw new Error('範本列表獲取失敗');
     }
 
-    if (!Array.isArray(response.data.data)) {
+    if (!Array.isArray(response.data)) {
       throw new Error('範本資料格式錯誤');
     }
 
@@ -169,21 +181,21 @@ class IntegrationTester {
     
     // 測試 AI 內容生成
     const aiRequest = {
-      type: 'generate',
       prompt: '請為智慧城市IoT平台專案撰寫技術能力說明',
       context: {
         projectType: '智慧城市',
-        technologies: ['IoT', 'AI', '大數據'],
-        companyStrengths: ['15年技術經驗', 'AI研發團隊', '成功案例豐富']
-      }
+        technologies: 'IoT, AI, 大數據',
+        companyStrengths: '15年技術經驗, AI研發團隊, 成功案例豐富'
+      },
+      section_type: '技術方案'
     };
 
-    const response = await axios.post(`${this.baseURL}/ai/generate`, aiRequest, { headers });
+    const response = await axios.post(`${this.baseURL}/api/v1/ai/generate`, aiRequest, { headers });
     if (response.status !== 200) {
       throw new Error('AI 內容生成失敗');
     }
 
-    if (!response.data.data.content) {
+    if (!response.data.content) {
       throw new Error('AI 生成內容為空');
     }
 
@@ -195,21 +207,31 @@ class IntegrationTester {
 
     const headers = { Authorization: `Bearer ${this.authToken}` };
     
+    // 先創建一個範本
+    const templateData = {
+      template_name: '測試範本',
+      description: '用於整合測試的範本',
+      category: '政府標案'
+    };
+    
+    const templateResponse = await axios.post(`${this.baseURL}/api/v1/templates`, templateData, { headers });
+    if (templateResponse.status !== 201) {
+      throw new Error('範本創建失敗');
+    }
+    
+    const templateId = templateResponse.data.id;
+
     // 測試完整標書生成流程
     const proposalData = {
-      title: '智慧交通管理系統建置案',
-      client: '新北市政府',
-      dueDate: '2024-12-31',
-      templateId: 'default-tech-template',
-      sections: [
-        { name: '公司簡介', type: 'company_profile' },
-        { name: '技術能力', type: 'technical_capability' },
-        { name: '專案計劃', type: 'project_plan' },
-        { name: '預算規劃', type: 'budget_plan' }
-      ]
+      proposal_title: '智慧交通管理系統建置案',
+      client_name: '新北市政府',
+      template_id: templateId,
+      deadline: '2024-12-31',
+      estimated_amount: 8000000,
+      description: '建置智慧交通管理系統，提升城市交通效率'
     };
 
-    const response = await axios.post(`${this.baseURL}/proposals`, proposalData, { headers });
+    const response = await axios.post(`${this.baseURL}/api/v1/proposals`, proposalData, { headers });
     if (response.status !== 201) {
       throw new Error('標書建立失敗');
     }

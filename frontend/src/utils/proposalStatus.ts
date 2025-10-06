@@ -57,7 +57,7 @@ const statusTransitions: Record<ProposalStatus, ProposalStatus[]> = {
  * @returns 可轉換的狀態陣列
  */
 export const getValidStatusTransitions = (currentStatus: ProposalStatus): ProposalStatus[] => {
-  return statusTransitions[currentStatus] || []
+  return statusTransitions[currentStatus] ?? []
 }
 
 /**
@@ -67,7 +67,7 @@ export const getValidStatusTransitions = (currentStatus: ProposalStatus): Propos
  * @returns 是否可以轉換
  */
 export const isValidStatusTransition = (fromStatus: ProposalStatus, toStatus: ProposalStatus): boolean => {
-  const validTransitions = statusTransitions[fromStatus] || []
+  const validTransitions = statusTransitions[fromStatus] ?? []
   return validTransitions.includes(toStatus)
 }
 
@@ -77,7 +77,7 @@ export const isValidStatusTransition = (fromStatus: ProposalStatus, toStatus: Pr
  * @returns 中文標籤
  */
 export const getStatusLabel = (status: string): string => {
-  return statusLabels[status as ProposalStatus] || status
+  return statusLabels[status as ProposalStatus] ?? status
 }
 
 /**
@@ -86,7 +86,7 @@ export const getStatusLabel = (status: string): string => {
  * @returns Material-UI 顏色名稱
  */
 export const getStatusColor = (status: string): 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' => {
-  return statusColors[status as ProposalStatus] || 'default'
+  return statusColors[status as ProposalStatus] ?? 'default'
 }
 
 /**
@@ -95,7 +95,7 @@ export const getStatusColor = (status: string): 'default' | 'primary' | 'seconda
  * @returns 十六進位顏色代碼
  */
 export const getStatusColorCode = (status: string): string => {
-  return statusColorCodes[status as ProposalStatus] || '#9E9E9E'
+  return statusColorCodes[status as ProposalStatus] ?? '#9E9E9E'
 }
 
 /**

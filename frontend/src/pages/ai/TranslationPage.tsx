@@ -81,7 +81,7 @@ const TranslationPage: React.FC = () => {
       toast.success('翻譯完成！')
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || '翻譯失敗'
+      const message = error.response?.data?.message ?? '翻譯失敗'
       toast.error(message)
     },
   })
@@ -141,7 +141,7 @@ const TranslationPage: React.FC = () => {
   ]
 
   const getLanguageName = (code: string) => {
-    return languages.find(lang => lang.code === code)?.name || code
+    return languages.find(lang => lang.code === code)?.name ?? code
   }
 
   const contextSuggestions = [

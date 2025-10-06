@@ -139,7 +139,7 @@ const UsageMonitoringPage: React.FC = () => {
     ],
   }
 
-  const data = usageData || mockUsageData
+  const data = usageData ?? mockUsageData
 
   const getUsagePercentage = (used: number, limit: number) => {
     return Math.min((used / limit) * 100, 100)

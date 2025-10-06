@@ -1,0 +1,136 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - generic [ref=e8]: 企業版
+        - button [ref=e9] [cursor=pointer]:
+          - img [ref=e11] [cursor=pointer]
+    - navigation [ref=e13]:
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - heading "智能標書產生器" [level=6] [ref=e17]
+          - generic [ref=e18]: AI Proposal Generator
+        - separator [ref=e19]
+        - list [ref=e20]:
+          - listitem [ref=e21]:
+            - button "控制台" [ref=e22] [cursor=pointer]:
+              - img [ref=e24] [cursor=pointer]
+              - generic [ref=e27] [cursor=pointer]: 控制台
+          - listitem [ref=e28]:
+            - button "標案管理" [ref=e29] [cursor=pointer]:
+              - img [ref=e31] [cursor=pointer]
+              - generic [ref=e34] [cursor=pointer]: 標案管理
+          - listitem [ref=e35]:
+            - button "公司資料" [ref=e36] [cursor=pointer]:
+              - img [ref=e38] [cursor=pointer]
+              - generic [ref=e41] [cursor=pointer]: 公司資料
+          - listitem [ref=e42]:
+            - button "團隊成員" [ref=e43] [cursor=pointer]:
+              - img [ref=e45] [cursor=pointer]
+              - generic [ref=e48] [cursor=pointer]: 團隊成員
+          - listitem [ref=e49]:
+            - button "專案實績" [ref=e50] [cursor=pointer]:
+              - img [ref=e52] [cursor=pointer]
+              - generic [ref=e55] [cursor=pointer]: 專案實績
+          - listitem [ref=e56]:
+            - button "獲獎紀錄" [ref=e57] [cursor=pointer]:
+              - img [ref=e59] [cursor=pointer]
+              - generic [ref=e62] [cursor=pointer]: 獲獎紀錄
+          - listitem [ref=e63]:
+            - button "標書範本" [ref=e64] [cursor=pointer]:
+              - img [ref=e66] [cursor=pointer]
+              - generic [ref=e69] [cursor=pointer]: 標書範本
+          - listitem [ref=e70]:
+            - button "標書編輯" [ref=e71] [cursor=pointer]:
+              - img [ref=e73] [cursor=pointer]
+              - generic [ref=e76] [cursor=pointer]: 標書編輯
+          - listitem [ref=e77]:
+            - button "文件匯出" [ref=e78] [cursor=pointer]:
+              - img [ref=e80] [cursor=pointer]
+              - generic [ref=e83] [cursor=pointer]: 文件匯出
+          - listitem [ref=e84]:
+            - button "AI 智能功能" [ref=e85] [cursor=pointer]:
+              - img [ref=e87] [cursor=pointer]
+              - generic [ref=e90] [cursor=pointer]: AI 智能功能
+              - img [ref=e91] [cursor=pointer]
+    - main [ref=e93]:
+      - generic [ref=e96]:
+        - generic [ref=e97]:
+          - heading "歡迎回來，效能測試用戶！" [level=4] [ref=e98]
+          - paragraph [ref=e99]: 智能標案產生器儀表板
+        - generic [ref=e101]:
+          - generic [ref=e102]:
+            - heading "公司資料完整度" [level=6] [ref=e103]
+            - generic [ref=e105]: 71%
+          - progressbar [ref=e106]
+          - paragraph [ref=e108]: 完善公司資料可以提升 AI 生成標書的品質
+          - button "完善資料" [ref=e109] [cursor=pointer]:
+            - img [ref=e111] [cursor=pointer]
+            - text: 完善資料
+        - generic [ref=e113]:
+          - generic [ref=e116]:
+            - generic [ref=e117]:
+              - img [ref=e119]
+              - generic [ref=e121]:
+                - heading "0" [level=4] [ref=e122]
+                - paragraph [ref=e123]: 標書總數
+            - generic [ref=e124]:
+              - generic [ref=e126]: 進行中 0
+              - generic [ref=e128]: 已完成 0
+          - generic [ref=e131]:
+            - generic [ref=e132]:
+              - img [ref=e134]
+              - generic [ref=e136]:
+                - heading "0%" [level=4] [ref=e137]
+                - paragraph [ref=e138]: 成功率
+            - generic [ref=e139]: 基於已完成標書計算
+          - generic [ref=e142]:
+            - generic [ref=e143]:
+              - img [ref=e145]
+              - generic [ref=e147]:
+                - heading "0" [level=4] [ref=e148]
+                - paragraph [ref=e149]: 專案實績
+            - button "查看全部" [ref=e150] [cursor=pointer]: 查看全部
+          - generic [ref=e153]:
+            - generic [ref=e154]:
+              - img [ref=e156]
+              - generic [ref=e158]:
+                - heading "0" [level=4] [ref=e159]
+                - paragraph [ref=e160]: 獲獎記錄
+            - generic [ref=e161]:
+              - img [ref=e162]
+              - generic [ref=e164]: 團隊成員 0 人
+        - generic [ref=e165]:
+          - generic [ref=e168]:
+            - heading "快速操作" [level=6] [ref=e169]
+            - generic [ref=e170]:
+              - button "建立新標書" [ref=e172] [cursor=pointer]:
+                - img [ref=e174] [cursor=pointer]
+                - text: 建立新標書
+              - button "更新公司資料" [ref=e177] [cursor=pointer]:
+                - img [ref=e179] [cursor=pointer]
+                - text: 更新公司資料
+              - button "管理團隊" [ref=e182] [cursor=pointer]:
+                - img [ref=e184] [cursor=pointer]
+                - text: 管理團隊
+              - button "新增實績" [ref=e187] [cursor=pointer]:
+                - img [ref=e189] [cursor=pointer]
+                - text: 新增實績
+          - generic [ref=e193]:
+            - generic [ref=e194]:
+              - heading "最近標書" [level=6] [ref=e195]
+              - button "查看全部" [ref=e196] [cursor=pointer]: 查看全部
+            - generic [ref=e197]:
+              - paragraph [ref=e198]: 尚未建立任何標書
+              - button "建立第一份標書" [ref=e199] [cursor=pointer]:
+                - img [ref=e201] [cursor=pointer]
+                - text: 建立第一份標書
+  - status [ref=e208]: 註冊成功！歡迎使用智能標書產生器
+  - generic [ref=e209]:
+    - img [ref=e211]
+    - button "Open Tanstack query devtools" [ref=e259] [cursor=pointer]:
+      - img [ref=e260] [cursor=pointer]
+```

@@ -16,7 +16,7 @@ export default defineConfig({
     ['junit', { outputFile: 'test-results/junit.xml' }]
   ],
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://localhost:3002',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -45,19 +45,19 @@ export default defineConfig({
     },
   ],
 
-  webServer: [
-    {
-      command: 'npm run dev:backend',
-      port: 3001,
-      reuseExistingServer: !process.env.CI,
-      env: {
-        NODE_ENV: 'test'
-      }
-    },
-    {
-      command: 'npm run dev:frontend',
-      port: 5173,
-      reuseExistingServer: !process.env.CI,
-    },
-  ],
+  // webServer disabled for manual testing
+  // webServer: [
+  //   {
+  //     command: 'cd ../backend && PORT=3002 npm run dev',
+  //     port: 3002,
+  //     reuseExistingServer: !process.env.CI,
+  //     timeout: 120000,
+  //   },
+  //   {
+  //     command: 'npm run dev',
+  //     port: 5173,
+  //     reuseExistingServer: !process.env.CI,
+  //     timeout: 60000,
+  //   },
+  // ],
 });
