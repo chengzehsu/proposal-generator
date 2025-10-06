@@ -291,6 +291,14 @@ export default [
     },
   },
 
+  // Logger utility - allow all console methods
+  {
+    files: ['**/utils/logger.ts'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+
   // Configuration files
   {
     files: ['**/*.config.{ts,js,mjs}', '**/vite.config.*', '**/jest.config.*', '**/playwright.config.*'],

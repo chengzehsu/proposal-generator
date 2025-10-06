@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
   Alert,
   Box,
@@ -102,9 +102,9 @@ const ProposalDetailPage: React.FC = () => {
       loadProposalDetail()
       loadAnalytics()
     }
-  }, [id])
+  }, [id, loadProposalDetail, loadAnalytics])
 
-  const loadProposalDetail = async () => {
+  const loadProposalDetail = useCallback(async () => {
     try {
       setLoading(true)
       const response = await proposalsApi.getProposal(id!)
@@ -128,9 +128,9 @@ const ProposalDetailPage: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [id])
 
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     try {
       setAnalyticsLoading(true)
       const token = localStorage.getItem('token')
@@ -152,7 +152,7 @@ const ProposalDetailPage: React.FC = () => {
     } finally {
       setAnalyticsLoading(false)
     }
-  }
+  }, [id])
 
   const handleUpdateTracking = async () => {
     try {

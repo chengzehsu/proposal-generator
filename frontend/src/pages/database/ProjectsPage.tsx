@@ -9,7 +9,7 @@ import {
   Typography,
 } from '@mui/material'
 import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid'
-import { Add, Delete, Edit, Lock, Public } from '@mui/icons-material'
+import { Add, Delete, Lock, Public } from '@mui/icons-material'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { projectsApi } from '@/services/api'
 import toast from 'react-hot-toast'
@@ -87,12 +87,6 @@ const ProjectsPage: React.FC = () => {
       headerName: '操作',
       width: 120,
       getActions: (params) => [
-        <GridActionsCellItem
-          key="edit"
-          icon={<Edit />}
-          label="編輯"
-          onClick={() => console.log('編輯專案', params.row.id)}
-        />,
         <GridActionsCellItem
           key="delete"
           icon={<Delete />}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
   Alert,
   Box,
@@ -69,9 +69,9 @@ const ProposalsListPage: React.FC = () => {
 
   useEffect(() => {
     loadProposals()
-  }, [filterStatus])
+  }, [loadProposals])
 
-  const loadProposals = async () => {
+  const loadProposals = useCallback(async () => {
     try {
       setLoading(true)
       const params: any = {}
@@ -86,7 +86,7 @@ const ProposalsListPage: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filterStatus])
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, proposal: Proposal) => {
     setAnchorEl(event.currentTarget)

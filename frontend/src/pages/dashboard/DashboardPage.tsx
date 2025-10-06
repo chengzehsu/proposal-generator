@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
   Avatar,
   Box,
@@ -70,9 +70,9 @@ const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     loadDashboardData()
-  }, [])
+  }, [loadDashboardData])
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true)
 
@@ -115,7 +115,7 @@ const DashboardPage: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [completeness])
 
   const handleOnboardingComplete = () => {
     toast.success('歡迎完成設定！您現在可以開始使用系統了')

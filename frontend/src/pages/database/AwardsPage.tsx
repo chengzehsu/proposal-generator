@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
   Alert,
   Box,
@@ -89,9 +89,9 @@ const AwardsPage: React.FC = () => {
 
   useEffect(() => {
     loadAwards()
-  }, [filterLevel, filterYear])
+  }, [loadAwards])
 
-  const loadAwards = async () => {
+  const loadAwards = useCallback(async () => {
     try {
       setLoading(true)
       const params: any = {}
@@ -107,7 +107,7 @@ const AwardsPage: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filterLevel, filterYear])
 
   const handleOpenDialog = (award?: Award) => {
     if (award) {

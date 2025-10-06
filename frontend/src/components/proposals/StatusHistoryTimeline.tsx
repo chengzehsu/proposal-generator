@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
   Alert,
   Box,
@@ -37,14 +37,14 @@ const StatusHistoryTimeline: React.FC<StatusHistoryTimelineProps> = ({ proposalI
 
   useEffect(() => {
     loadHistory()
-  }, [proposalId])
+  }, [loadHistory])
 
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     try {
       setLoading(true)
       const response = await proposalsApi.getProposalStatusHistory(proposalId)
       if (response.data) {
-        setHistory(response.data.history || [])
+        setHistory(response.data.history ?? [])
       }
     } catch (error: any) {
       console.error('Failed to load status history:', error)
@@ -52,7 +52,7 @@ const StatusHistoryTimeline: React.FC<StatusHistoryTimelineProps> = ({ proposalI
     } finally {
       setLoading(false)
     }
-  }
+  }, [proposalId])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
