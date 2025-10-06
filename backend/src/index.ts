@@ -27,8 +27,9 @@ import generationRoutes from './routes/generation';
 import aiRoutes from './routes/ai';
 import exportRoutes from './routes/exports';
 import analyticsRoutes from './routes/analytics';
-import swaggerUi from 'swagger-ui-express';
-import swaggerSpec from './config/swagger';
+// TODO: Swagger API 文檔（低優先級功能，待類型定義修正後啟用）
+// import swaggerUi from 'swagger-ui-express';
+// import swaggerSpec from './config/swagger';
 
 const app = express();
 const server = createServer(app);
@@ -145,17 +146,18 @@ app.use('/api/v1/ai', aiRoutes);
 app.use('/api/v1/exports', exportRoutes);
 app.use('/api/v1/analytics', analyticsRoutes);
 
-// Swagger API Documentation
-if (process.env.NODE_ENV !== 'production') {
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-    explorer: true,
-    swaggerOptions: {
-      docExpansion: 'none',
-      filter: true,
-      showRequestDuration: true
-    }
-  }));
-}
+// TODO: Swagger API 文檔（低優先級功能）
+// 替代方案：使用 specs/001-ai/contracts/api-spec.yaml 作為 API 文檔參考
+// if (process.env.NODE_ENV !== 'production') {
+//   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+//     explorer: true,
+//     swaggerOptions: {
+//       docExpansion: 'none',
+//       filter: true,
+//       showRequestDuration: true
+//     }
+//   }));
+// }
 
 // Error handling
 app.use(notFound);

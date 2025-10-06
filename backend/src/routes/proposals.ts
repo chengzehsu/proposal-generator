@@ -1,5 +1,6 @@
 import express from 'express';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../utils/database';
 import { logger } from '../utils/logger';
 import { authenticateToken, requireCompanyAccess } from '../middleware/auth';
@@ -486,7 +487,7 @@ router.patch('/:id/status', authenticateToken, requireCompanyAccess, async (req,
     }
 
     // 使用事務更新狀態並記錄歷史
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // 更新標書狀態
       const updatedProposal = await tx.proposal.update({
         where: { id: proposalId },
@@ -625,7 +626,7 @@ router.post('/:id/convert-to-project', authenticateToken, requireCompanyAccess, 
     }
 
     // 使用事務確保原子性：建立 Project 並更新 Proposal
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // 1. 建立 Project 記錄
       const newProject = await tx.project.create({
         data: {
