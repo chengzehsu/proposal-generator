@@ -67,10 +67,6 @@ const ProposalsListPage: React.FC = () => {
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null)
   const [statusDialogOpen, setStatusDialogOpen] = useState(false)
 
-  useEffect(() => {
-    loadProposals()
-  }, [loadProposals])
-
   const loadProposals = useCallback(async () => {
     try {
       setLoading(true)
@@ -87,6 +83,10 @@ const ProposalsListPage: React.FC = () => {
       setLoading(false)
     }
   }, [filterStatus])
+
+  useEffect(() => {
+    loadProposals()
+  }, [loadProposals])
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, proposal: Proposal) => {
     setAnchorEl(event.currentTarget)

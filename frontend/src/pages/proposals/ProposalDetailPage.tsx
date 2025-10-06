@@ -97,13 +97,6 @@ const ProposalDetailPage: React.FC = () => {
     notes: ''
   })
 
-  useEffect(() => {
-    if (id) {
-      loadProposalDetail()
-      loadAnalytics()
-    }
-  }, [id, loadProposalDetail, loadAnalytics])
-
   const loadProposalDetail = useCallback(async () => {
     if (!id) return
     try {
@@ -154,6 +147,13 @@ const ProposalDetailPage: React.FC = () => {
       setAnalyticsLoading(false)
     }
   }, [id])
+
+  useEffect(() => {
+    if (id) {
+      loadProposalDetail()
+      loadAnalytics()
+    }
+  }, [id, loadProposalDetail, loadAnalytics])
 
   const handleUpdateTracking = async () => {
     if (!id) return

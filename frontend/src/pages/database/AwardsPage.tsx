@@ -87,10 +87,6 @@ const AwardsPage: React.FC = () => {
     display_order: 0
   })
 
-  useEffect(() => {
-    loadAwards()
-  }, [loadAwards])
-
   const loadAwards = useCallback(async () => {
     try {
       setLoading(true)
@@ -108,6 +104,10 @@ const AwardsPage: React.FC = () => {
       setLoading(false)
     }
   }, [filterLevel, filterYear])
+
+  useEffect(() => {
+    loadAwards()
+  }, [loadAwards])
 
   const handleOpenDialog = (award?: Award) => {
     if (award) {

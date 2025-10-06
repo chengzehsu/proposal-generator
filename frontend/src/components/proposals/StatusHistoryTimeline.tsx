@@ -35,10 +35,6 @@ const StatusHistoryTimeline: React.FC<StatusHistoryTimelineProps> = ({ proposalI
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadHistory()
-  }, [loadHistory])
-
   const loadHistory = useCallback(async () => {
     try {
       setLoading(true)
@@ -53,6 +49,10 @@ const StatusHistoryTimeline: React.FC<StatusHistoryTimelineProps> = ({ proposalI
       setLoading(false)
     }
   }, [proposalId])
+
+  useEffect(() => {
+    loadHistory()
+  }, [loadHistory])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)

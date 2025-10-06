@@ -69,10 +69,6 @@ const DashboardPage: React.FC = () => {
   const [recentProposals, setRecentProposals] = useState<RecentProposal[]>([])
   const { completeness, loading: completenessLoading, refresh: refreshCompleteness } = useDataCompleteness()
 
-  useEffect(() => {
-    loadDashboardData()
-  }, [loadDashboardData])
-
   const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true)
@@ -117,6 +113,10 @@ const DashboardPage: React.FC = () => {
       setLoading(false)
     }
   }, [completeness])
+
+  useEffect(() => {
+    loadDashboardData()
+  }, [loadDashboardData])
 
   const handleOnboardingComplete = () => {
     toast.success('歡迎完成設定！您現在可以開始使用系統了')
