@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from './auth';
-import type { User, LoginResponse } from '@shared/types/auth';
+import type { LoginResponse } from '@shared/types/auth';
 import type { Company } from '@shared/types/company';
 
 // API base configuration
