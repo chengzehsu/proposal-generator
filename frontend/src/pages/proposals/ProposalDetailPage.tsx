@@ -105,9 +105,10 @@ const ProposalDetailPage: React.FC = () => {
   }, [id, loadProposalDetail, loadAnalytics])
 
   const loadProposalDetail = useCallback(async () => {
+    if (!id) return
     try {
       setLoading(true)
-      const response = await proposalsApi.getProposal(id!)
+      const response = await proposalsApi.getProposal(id)
       const data = response.data
       setProposal(data)
 
@@ -155,8 +156,9 @@ const ProposalDetailPage: React.FC = () => {
   }, [id])
 
   const handleUpdateTracking = async () => {
+    if (!id) return
     try {
-      await proposalsApi.updateProposal(id!, formData)
+      await proposalsApi.updateProposal(id, formData)
       toast.success('追蹤資訊已更新')
       setEditMode(false)
       loadProposalDetail()
@@ -186,10 +188,12 @@ const ProposalDetailPage: React.FC = () => {
       setConvertDialogOpen(false)
 
       // 更新標案狀態為已轉換
-      await proposalsApi.updateProposal(id!, {
-        ...formData,
-        notes: `${formData.notes || ''  }\n\n已轉換為實績案例。`
-      })
+      if (id) {
+        await proposalsApi.updateProposal(id, {
+          ...formData,
+          notes: `${formData.notes ?? ''}\n\n已轉換為實績案例。`
+        })
+      }
 
       loadProposalDetail()
     } catch (error) {
@@ -467,9 +471,11 @@ const ProposalDetailPage: React.FC = () => {
           </Card>
 
           {/* 狀態歷史時間軸 */}
-          <Box sx={{ mt: 3 }}>
-            <StatusHistoryTimeline proposalId={id!} />
-          </Box>
+          {id && (
+            <Box sx={{ mt: 3 }}>
+              <StatusHistoryTimeline proposalId={id} />
+            </Box>
+          )}
         </Grid>
 
         {/* 側邊欄 - 統計與建議 */}

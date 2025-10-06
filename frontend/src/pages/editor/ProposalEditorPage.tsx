@@ -78,7 +78,7 @@ const ProposalEditorPage: React.FC = () => {
   // 載入標書資料
   const { data: proposal, isLoading, error } = useQuery({
     queryKey: ['proposals', 'detail', id],
-    queryFn: () => proposalsApi.getProposal(id!),
+    queryFn: () => id ? proposalsApi.getProposal(id) : Promise.reject(new Error('No proposal ID')),
     enabled: !!id,
     select: (data) => data.data as ProposalData,
   })
@@ -124,7 +124,7 @@ const ProposalEditorPage: React.FC = () => {
   // 載入版本歷史
   const { data: versions = [] } = useQuery({
     queryKey: ['proposals', 'versions', id],
-    queryFn: () => proposalsApi.getProposalVersions(id!),
+    queryFn: () => id ? proposalsApi.getProposalVersions(id) : Promise.reject(new Error('No proposal ID')),
     enabled: !!id && versionsDialogOpen,
     select: (data) => data.data || [],
   })
@@ -132,10 +132,10 @@ const ProposalEditorPage: React.FC = () => {
   // 更新標書內容
   const updateContentMutation = useMutation({
     mutationFn: (data: { content: string }) =>
-      proposalsApi.updateProposalContent(id!, {
+      id ? proposalsApi.updateProposalContent(id, {
         content: { main: data.content },
         version: proposal?.version ?? 1,
-      }),
+      }) : Promise.reject(new Error('No proposal ID')),
     onSuccess: () => {
       setHasUnsavedChanges(false);
       queryClient.invalidateQueries({ queryKey: ['proposals', 'detail', id] });
@@ -144,7 +144,7 @@ const ProposalEditorPage: React.FC = () => {
 
   // 更新標書基本資訊
   const updateProposalMutation = useMutation({
-    mutationFn: (data: any) => proposalsApi.updateProposal(id!, data),
+    mutationFn: (data: any) => id ? proposalsApi.updateProposal(id, data) : Promise.reject(new Error('No proposal ID')),
     onSuccess: () => {
       toast.success('標書資訊更新成功！')
       queryClient.invalidateQueries({ queryKey: ['proposals', 'detail', id] })
