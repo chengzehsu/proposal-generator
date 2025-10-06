@@ -172,7 +172,7 @@ export function buildSystemPrompt(context: PromptContext): string {
 
   // 添加章節特定提示
   if (context.sectionType && SYSTEM_PROMPTS.sectionSpecific[context.sectionType as keyof typeof SYSTEM_PROMPTS.sectionSpecific]) {
-    prompt += '\n\n' + SYSTEM_PROMPTS.sectionSpecific[context.sectionType as keyof typeof SYSTEM_PROMPTS.sectionSpecific];
+    prompt += `\n\n${  SYSTEM_PROMPTS.sectionSpecific[context.sectionType as keyof typeof SYSTEM_PROMPTS.sectionSpecific]}`;
   }
 
   // 添加語調要求
@@ -183,7 +183,7 @@ export function buildSystemPrompt(context: PromptContext): string {
       'formal': '採用正式、莊重的語調',
       'persuasive': '使用具說服力和吸引力的語調'
     };
-    prompt += '\n\n語調要求：' + toneInstructions[context.tone];
+    prompt += `\n\n語調要求：${  toneInstructions[context.tone]}`;
   }
 
   // 添加長度要求
@@ -193,7 +193,7 @@ export function buildSystemPrompt(context: PromptContext): string {
       'medium': '內容適中，詳略得當（建議500-1200字）',
       'long': '內容詳細，論述完整（建議1200字以上）'
     };
-    prompt += '\n\n長度要求：' + lengthInstructions[context.length];
+    prompt += `\n\n長度要求：${  lengthInstructions[context.length]}`;
   }
 
   return prompt;
@@ -202,7 +202,7 @@ export function buildSystemPrompt(context: PromptContext): string {
 /**
  * 生成上下文資訊
  */
-export function buildContextPrompt(context: PromptContext): string {
+export function _buildContextPrompt(context: PromptContext): string {
   let contextPrompt = '';
 
   if (context.company) {
@@ -322,7 +322,7 @@ export function buildTranslationPrompt(
   let prompt = TRANSLATION_PROMPTS.base;
 
   if (TRANSLATION_PROMPTS.languages[targetLanguage as keyof typeof TRANSLATION_PROMPTS.languages]) {
-    prompt += '\n\n' + TRANSLATION_PROMPTS.languages[targetLanguage as keyof typeof TRANSLATION_PROMPTS.languages];
+    prompt += `\n\n${  TRANSLATION_PROMPTS.languages[targetLanguage as keyof typeof TRANSLATION_PROMPTS.languages]}`;
   }
 
   if (contextInfo) {

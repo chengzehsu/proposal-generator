@@ -34,7 +34,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom'
 import { projectsApi, proposalsApi } from '@/services/api'
 import toast from 'react-hot-toast'
-import { ProposalStatus, statusLabels, getStatusColor } from '@/utils/proposalStatus'
+import { ProposalStatus, getStatusColor, statusLabels } from '@/utils/proposalStatus'
 import UpdateStatusDialog from '@/components/proposals/UpdateStatusDialog'
 import StatusHistoryTimeline from '@/components/proposals/StatusHistoryTimeline'
 

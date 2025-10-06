@@ -1,50 +1,50 @@
 import React, { useState } from 'react'
 import {
   Box,
-  Typography,
+  Button,
   Card,
   CardContent,
-  Button,
-  Grid,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Checkbox,
-  FormControlLabel,
-  Divider,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  FormControl,
+  FormControlLabel,
+  Grid,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
+  Tab,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Tabs,
-  Tab,
+  Typography,
 } from '@mui/material'
 import {
-  GetApp,
-  PictureAsPdf,
-  Description,
   ArticleOutlined,
-  Delete,
-  Download,
-  Refresh,
-  CloudDownload,
-  CheckCircle,
-  Error as ErrorIcon,
-  Schedule,
-  History,
   Layers as Batch,
+  CheckCircle,
+  CloudDownload,
+  Delete,
+  Description,
+  Download,
+  Error as ErrorIcon,
+  GetApp,
+  History,
+  PictureAsPdf,
+  Refresh,
+  Schedule,
 } from '@mui/icons-material'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { exportApi, proposalsApi } from '@/services/api'
 import toast from 'react-hot-toast'
@@ -189,7 +189,7 @@ const ExportPage: React.FC = () => {
     const k = 1024
     const sizes = ['B', 'KB', 'MB', 'GB']
     const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))  } ${  sizes[i]}`
   }
 
   const getFormatIcon = (format: string) => {

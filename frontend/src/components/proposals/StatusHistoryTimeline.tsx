@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from 'react'
 import {
+  Alert,
   Box,
   Card,
   CardContent,
   Chip,
-  Divider,
-  Typography,
-  Alert,
   CircularProgress,
+  Divider,
   List,
-  ListItem
+  ListItem,
+  Typography
 } from '@mui/material'
 import {
   History as HistoryIcon
 } from '@mui/icons-material'
 import { proposalsApi } from '@/services/api'
-import { statusLabels, getStatusColor } from '@/utils/proposalStatus'
+import { getStatusColor, statusLabels } from '@/utils/proposalStatus'
 import toast from 'react-hot-toast'
 
 interface StatusHistoryTimelineProps {

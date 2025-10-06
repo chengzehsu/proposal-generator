@@ -1,29 +1,29 @@
 import React, { useState } from 'react'
 import {
+  Avatar,
   Box,
-  Typography,
+  Button,
   Card,
   CardContent,
-  Button,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
-  TextField,
+  DialogContent,
+  DialogTitle,
   Grid,
-  Avatar,
   IconButton,
+  TextField,
+  Typography,
 } from '@mui/material'
-import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid'
+import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid'
 import {
   Add,
-  Edit,
   Delete,
+  Edit,
   Person,
   Star,
   StarBorder,
 } from '@mui/icons-material'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { teamApi } from '@/services/api'
 import toast from 'react-hot-toast'
@@ -138,11 +138,13 @@ const TeamMembersPage: React.FC = () => {
       width: 120,
       getActions: (params) => [
         <GridActionsCellItem
+          key="edit"
           icon={<Edit />}
           label="編輯"
           onClick={() => handleEdit(params.row)}
         />,
         <GridActionsCellItem
+          key="delete"
           icon={<Delete />}
           label="刪除"
           onClick={() => deleteMutation.mutate(params.row.id)}

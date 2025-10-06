@@ -50,10 +50,10 @@ describe('Auth 路由單元測試', () => {
     };
     
     mockRes = {
-      json: jest.fn().mockReturnThis(),
-      status: jest.fn().mockReturnThis(),
-      send: jest.fn().mockReturnThis(),
-    };
+      json: jest.fn().mockReturnThis() as any,
+      status: jest.fn().mockReturnThis() as any,
+      send: jest.fn().mockReturnThis() as any,
+    } as any;
     
     // Clear all mocks
     jest.clearAllMocks();

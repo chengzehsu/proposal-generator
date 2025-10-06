@@ -42,7 +42,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { proposalsApi } from '@/services/api'
 import toast from 'react-hot-toast'
-import { ProposalStatus, statusLabels, getStatusColor } from '@/utils/proposalStatus'
+import { ProposalStatus, getStatusColor, statusLabels } from '@/utils/proposalStatus'
 import UpdateStatusDialog from '@/components/proposals/UpdateStatusDialog'
 
 interface Proposal {

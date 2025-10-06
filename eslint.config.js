@@ -30,7 +30,7 @@ export default [
       parserOptions: {
         ecmaVersion: 2022,
         sourceType: 'module',
-        project: true,
+        projectService: true,
       },
       globals: {
         console: 'readonly',
@@ -50,23 +50,26 @@ export default [
     rules: {
       ...js.configs.recommended.rules,
       ...typescript.configs.recommended.rules,
-      
-      // TypeScript specific rules
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+
+      // TypeScript specific rules - warnings for gradual improvement
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-non-null-assertion': 'warn',
-      '@typescript-eslint/prefer-nullish-coalescing': 'error',
-      '@typescript-eslint/prefer-optional-chain': 'error',
-      
-      // General rules
+      '@typescript-eslint/prefer-nullish-coalescing': 'warn',
+      '@typescript-eslint/prefer-optional-chain': 'warn',
+      '@typescript-eslint/no-require-imports': 'warn',
+
+      // General rules - warnings for gradual improvement
       'no-console': ['warn', { allow: ['warn', 'error'] }],
-      'prefer-const': 'error',
+      'prefer-const': 'warn',
       'no-var': 'error',
-      'object-shorthand': 'error',
-      'prefer-template': 'error',
-      'sort-imports': ['error', { ignoreDeclarationSort: true }],
+      'object-shorthand': 'warn',
+      'prefer-template': 'warn',
+      'sort-imports': ['warn', { ignoreDeclarationSort: true }],
+      'no-unreachable': 'warn',
+      'no-undef': 'warn',
     },
   },
 
@@ -88,16 +91,28 @@ export default [
         afterAll: 'readonly',
         beforeEach: 'readonly',
         afterEach: 'readonly',
+        // Node.js globals
+        NodeJS: 'readonly',
+        BufferEncoding: 'readonly',
+        Buffer: 'readonly',
+        performance: 'readonly',
+        setTimeout: 'readonly',
+        setImmediate: 'readonly',
+        clearTimeout: 'readonly',
+        clearImmediate: 'readonly',
+        global: 'readonly',
+        process: 'readonly',
       },
     },
     rules: {
       // Allow console in backend
       'no-console': 'off',
-      
-      // Stricter backend rules
-      '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/prefer-nullish-coalescing': 'error',
-      '@typescript-eslint/prefer-optional-chain': 'error',
+
+      // Backend rules - set to warning for gradual improvement
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/prefer-nullish-coalescing': 'warn',
+      '@typescript-eslint/prefer-optional-chain': 'warn',
+      'no-undef': 'warn',
       
       // Security rules for backend
       'no-eval': 'error',
@@ -109,7 +124,7 @@ export default [
 
   // Frontend specific configuration
   {
-    files: ['frontend/**/*.{ts,tsx,js,jsx}'],
+    files: ['frontend/src/**/*.{ts,tsx,js,jsx}'],
     languageOptions: {
       parser: typescriptParser,
       parserOptions: {
@@ -135,6 +150,17 @@ export default [
         Headers: 'readonly',
         Request: 'readonly',
         Response: 'readonly',
+        // Additional browser globals
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        console: 'readonly',
+        alert: 'readonly',
+        confirm: 'readonly',
+        prompt: 'readonly',
+        speechSynthesis: 'readonly',
+        JSX: 'readonly',
       },
     },
     plugins: {

@@ -1,34 +1,34 @@
 import React, { useState } from 'react'
 import {
   Box,
-  Typography,
+  Button,
   Card,
   CardContent,
-  Button,
-  TextField,
-  Grid,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Divider,
   Chip,
-  Paper,
   CircularProgress,
-  Tabs,
-  Tab,
+  Divider,
+  FormControl,
+  Grid,
   IconButton,
+  InputLabel,
   List,
   ListItem,
-  ListItemText,
   ListItemSecondaryAction,
+  ListItemText,
+  MenuItem,
+  Paper,
+  Select,
+  Tab,
+  Tabs,
+  TextField,
+  Typography,
 } from '@mui/material'
 import {
-  Translate,
   ContentCopy,
-  Save,
   History,
+  Save,
   SwapHoriz as Swap,
+  Translate,
   VolumeUp,
 } from '@mui/icons-material'
 import { useMutation } from '@tanstack/react-query'
@@ -427,7 +427,7 @@ const TranslationPage: React.FC = () => {
                           </Typography>
                         </Box>
                       }
-                      secondary={item.translated_content.substring(0, 100) + '...'}
+                      secondary={`${item.translated_content.substring(0, 100)  }...`}
                     />
                     <ListItemSecondaryAction>
                       <Button

@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import { CssBaseline } from '@mui/material'
 import Layout from '@/components/layout/Layout'
@@ -14,6 +14,9 @@ import ContentImprovementPage from '@/pages/ai/ContentImprovementPage'
 import TranslationPage from '@/pages/ai/TranslationPage'
 import RequirementExtractionPage from '@/pages/ai/RequirementExtractionPage'
 import UsageMonitoringPage from '@/pages/ai/UsageMonitoringPage'
+import AwardsPage from '@/pages/database/AwardsPage'
+import ProposalsListPage from '@/pages/proposals/ProposalsListPage'
+import ProposalDetailPage from '@/pages/proposals/ProposalDetailPage'
 import { useAuthStore } from '@/services/auth'
 import { useEffect } from 'react'
 
@@ -92,8 +95,10 @@ function App() {
           <Route path="/database/company" element={<CompanyDataPage />} />
           <Route path="/database/team" element={<TeamMembersPage />} />
           <Route path="/database/projects" element={<ProjectsPage />} />
-          <Route path="/database/awards" element={<div>獲獎紀錄頁面 - 開發中</div>} />
+          <Route path="/database/awards" element={<AwardsPage />} />
           <Route path="/templates" element={<TemplatesPage />} />
+          <Route path="/proposals" element={<ProposalsListPage />} />
+          <Route path="/proposals/:id" element={<ProposalDetailPage />} />
           <Route path="/editor/:id?" element={<ProposalEditorPage />} />
           <Route path="/ai/improve" element={<ContentImprovementPage />} />
           <Route path="/ai/translate" element={<TranslationPage />} />

@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react'
-import { useEditor, EditorContent } from '@tiptap/react'
+import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import CharacterCount from '@tiptap/extension-character-count'
@@ -7,33 +7,33 @@ import { Table } from '@tiptap/extension-table'
 import Image from '@tiptap/extension-image'
 import {
   Box,
-  Paper,
-  Toolbar,
-  IconButton,
-  Divider,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  IconButton,
+  Paper,
+  TextField,
+  Toolbar,
 } from '@mui/material'
 import {
+  AutoAwesome,
+  Code,
   FormatBold,
   FormatItalic,
-  FormatUnderlined,
   FormatListBulleted,
   FormatListNumbered,
   FormatQuote,
-  Code,
-  Undo,
-  Redo,
-  TableChart as TableIcon,
+  FormatUnderlined,
   Image as ImageIcon,
-  AutoAwesome,
-  Save,
   Preview,
+  Redo,
+  Save,
+  TableChart as TableIcon,
+  Undo,
 } from '@mui/icons-material'
 
 interface ProposalEditorProps {

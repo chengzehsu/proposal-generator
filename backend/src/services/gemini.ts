@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
+import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
 import { logger } from '../utils/logger';
 
 // 環境變數檢查
@@ -112,8 +112,8 @@ export async function callGeminiAPI(params: GeminiAPIParams): Promise<string> {
       promptLength: params.prompt.length,
       responseLength: text.length,
       duration,
-      tokensUsed: response.usageMetadata || null,
-      finishReason: response.candidates?.[0]?.finishReason || 'unknown'
+      tokensUsed: response.usageMetadata ?? null,
+      finishReason: response.candidates?.[0]?.finishReason ?? 'unknown'
     });
 
     return text;

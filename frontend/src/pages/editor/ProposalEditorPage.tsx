@@ -1,41 +1,45 @@
-import React, { useState, useEffect, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import {
-  Box,
-  Typography,
-  Paper,
-  Button,
-  TextField,
-  Grid,
-  Breadcrumbs,
-  Link,
-  Chip,
   Alert,
+  Box,
+  Breadcrumbs,
+  Button,
+  Chip,
   CircularProgress,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  Grid,
+  Link,
   List,
   ListItem,
-  ListItemText,
   ListItemIcon,
-  Divider,
+  ListItemText,
+  Paper,
+  TextField,
+  Typography,
 } from '@mui/material'
 import {
   ArrowBack,
-  Save,
-  History,
-  Description,
-  NavigateNext,
   CheckCircle,
-  Schedule,
+  CloudOff,
+  Description,
   Error as ErrorIcon,
+  History,
+  NavigateNext,
+  Save,
+  Schedule,
+  WifiOff,
 } from '@mui/icons-material'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
-import { proposalsApi, aiApi } from '@/services/api'
+import { aiApi, proposalsApi } from '@/services/api'
 import ProposalEditor from '@/components/editor/ProposalEditor'
+import { SaveStatus, useAutoSave, useBeforeUnload, useOfflineStorage } from '@/hooks'
+import { formatRelativeTime } from '@/utils/formatTime'
 import toast from 'react-hot-toast'
 
 interface ProposalData {
@@ -58,11 +62,10 @@ const ProposalEditorPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  
+
   const [content, setContent] = useState('')
-  const [autoSaveStatus, setAutoSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved')
   const [versionsDialogOpen, setVersionsDialogOpen] = useState(false)
-  const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 
   const form = useForm({
     defaultValues: {
@@ -80,17 +83,43 @@ const ProposalEditorPage: React.FC = () => {
     select: (data) => data.data as ProposalData,
   })
 
+  // 本地草稿儲存 (用於離線備份和草稿恢復)
+  const [draftContent, , clearDraft] = useOfflineStorage<string>(
+    `proposal_draft_${id}`,
+    ''
+  );
+
   // Populate form when proposal data is loaded
   useEffect(() => {
     if (proposal) {
-      setContent(proposal.content.main || '')
+      // 檢查是否有本地草稿
+      if (draftContent && draftContent !== proposal.content.main) {
+        const shouldRestore = window.confirm(
+          '發現本地儲存的草稿，是否恢復？\n\n' +
+          '點擊「確定」恢復草稿，點擊「取消」載入伺服器版本。'
+        );
+
+        if (shouldRestore) {
+          setContent(draftContent);
+          setHasUnsavedChanges(true);
+          toast.success('已恢復本地草稿');
+        } else {
+          setContent(proposal.content.main ?? '');
+          clearDraft(); // 清除草稿
+        }
+      } else {
+        setContent(proposal.content.main ?? '');
+      }
+
       form.reset({
         title: proposal.title,
         client_name: proposal.client_name,
         deadline: proposal.deadline,
-      })
+      });
     }
-  }, [proposal, form])
+    // form.reset 是穩定的，不需要加入依賴
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [proposal, draftContent, clearDraft])
 
   // 載入版本歷史
   const { data: versions = [] } = useQuery({
@@ -102,19 +131,16 @@ const ProposalEditorPage: React.FC = () => {
 
   // 更新標書內容
   const updateContentMutation = useMutation({
-    mutationFn: (data: { content: string }) => 
+    mutationFn: (data: { content: string }) =>
       proposalsApi.updateProposalContent(id!, {
         content: { main: data.content },
         version: proposal?.version || 1,
       }),
-    onMutate: () => setAutoSaveStatus('saving'),
     onSuccess: () => {
-      setAutoSaveStatus('saved')
-      setLastSaveTime(new Date())
-      queryClient.invalidateQueries({ queryKey: ['proposals', 'detail', id] })
+      setHasUnsavedChanges(false);
+      queryClient.invalidateQueries({ queryKey: ['proposals', 'detail', id] });
     },
-    onError: () => setAutoSaveStatus('error'),
-  })
+  });
 
   // 更新標書基本資訊
   const updateProposalMutation = useMutation({
@@ -126,39 +152,60 @@ const ProposalEditorPage: React.FC = () => {
     onError: () => toast.error('更新失敗'),
   })
 
+  // 自動儲存 Hook (支援離線備份)
+  const {
+    status: autoSaveStatus,
+    lastSaved,
+    error: saveError,
+    isOffline,
+    save: manualSave,
+  } = useAutoSave({
+    data: content,
+    onSave: async (newContent: string) => {
+      await updateContentMutation.mutateAsync({ content: newContent });
+    },
+    delay: 2000, // 2 秒防抖
+    enabled: !!proposal && content !== (proposal?.content.main ?? ''),
+    storageKey: `proposal_draft_${id}`,
+    enableOfflineBackup: true,
+    onSuccess: () => {
+      toast.success('儲存成功');
+    },
+    onError: (error) => {
+      toast.error(`儲存失敗: ${error.message}`);
+    },
+  });
+
+  // 離開頁面前確認
+  useBeforeUnload(
+    hasUnsavedChanges || autoSaveStatus === SaveStatus.SAVING,
+    '您有未儲存的變更，確定要離開嗎？'
+  );
+
   // AI 生成內容
   const aiGenerateMutation = useMutation({
     mutationFn: aiApi.generateContent,
     onSuccess: (response) => {
-      const generatedContent = response.data.content
+      const generatedContent = response.data.content;
       if (generatedContent) {
-        setContent(prev => prev + '\n\n' + generatedContent)
-        toast.success('AI 內容生成成功！')
+        setContent((prev) => `${prev}\n\n${generatedContent}`);
+        setHasUnsavedChanges(true);
+        toast.success('AI 內容生成成功！');
       }
     },
     onError: () => toast.error('AI 生成失敗'),
-  })
-
-  // 自動儲存功能
-  const autoSave = useCallback(
-    debounce((newContent: string) => {
-      if (newContent !== (proposal?.content.main || '')) {
-        updateContentMutation.mutate({ content: newContent })
-      }
-    }, 2000),
-    [proposal?.content.main, updateContentMutation]
-  )
+  });
 
   // 內容變更處理
   const handleContentChange = (newContent: string) => {
-    setContent(newContent)
-    autoSave(newContent)
-  }
+    setContent(newContent);
+    setHasUnsavedChanges(true);
+  };
 
   // 手動儲存
   const handleManualSave = () => {
-    updateContentMutation.mutate({ content })
-  }
+    manualSave();
+  };
 
   // AI 生成處理
   const handleAIGenerate = (prompt: string) => {
@@ -241,16 +288,43 @@ const ProposalEditorPage: React.FC = () => {
     return labels[status as keyof typeof labels] || status
   }
 
-  const getAutoSaveIcon = () => {
-    switch (autoSaveStatus) {
-      case 'saving':
-        return <CircularProgress size={16} />
-      case 'saved':
-        return <CheckCircle color="success" />
-      case 'error':
-        return <ErrorIcon color="error" />
+  const getAutoSaveStatusText = () => {
+    if (isOffline) {
+      return '離線編輯 (本地備份)';
     }
-  }
+
+    switch (autoSaveStatus) {
+      case SaveStatus.SAVING:
+        return '儲存中...';
+      case SaveStatus.SAVED:
+        return lastSaved ? `已儲存 ${formatRelativeTime(lastSaved)}` : '已儲存';
+      case SaveStatus.ERROR:
+        return `儲存失敗${saveError ? `: ${saveError.message}` : ''}`;
+      case SaveStatus.OFFLINE:
+        return '離線模式 (本地備份)';
+      default:
+        return '';
+    }
+  };
+
+  const getAutoSaveIcon = () => {
+    if (isOffline) {
+      return <WifiOff fontSize="small" color="warning" />;
+    }
+
+    switch (autoSaveStatus) {
+      case SaveStatus.SAVING:
+        return <CircularProgress size={16} />;
+      case SaveStatus.SAVED:
+        return <CheckCircle fontSize="small" color="success" />;
+      case SaveStatus.ERROR:
+        return <ErrorIcon fontSize="small" color="error" />;
+      case SaveStatus.OFFLINE:
+        return <CloudOff fontSize="small" color="warning" />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -272,16 +346,22 @@ const ProposalEditorPage: React.FC = () => {
           </Breadcrumbs>
 
           <Box display="flex" gap={1} alignItems="center">
+            {/* 離線模式指示 */}
+            {isOffline && (
+              <Chip
+                icon={<WifiOff />}
+                label="離線模式"
+                color="warning"
+                size="small"
+                sx={{ mr: 1 }}
+              />
+            )}
+
+            {/* 儲存狀態指示器 */}
             <Box display="flex" alignItems="center" gap={1}>
               {getAutoSaveIcon()}
               <Typography variant="caption" color="text.secondary">
-                {autoSaveStatus === 'saved' && lastSaveTime
-                  ? `已儲存 ${lastSaveTime.toLocaleTimeString()}`
-                  : autoSaveStatus === 'saving'
-                  ? '儲存中...'
-                  : autoSaveStatus === 'error'
-                  ? '儲存失敗'
-                  : ''}
+                {getAutoSaveStatusText()}
               </Typography>
             </Box>
 
@@ -297,7 +377,7 @@ const ProposalEditorPage: React.FC = () => {
               variant="contained"
               startIcon={<Save />}
               onClick={handleManualSave}
-              disabled={updateContentMutation.isPending}
+              disabled={autoSaveStatus === SaveStatus.SAVING}
             >
               手動儲存
             </Button>
@@ -351,6 +431,30 @@ const ProposalEditorPage: React.FC = () => {
         </Grid>
       </Paper>
 
+      {/* 離線模式提示 */}
+      {isOffline && (
+        <Alert severity="warning" sx={{ m: 2 }}>
+          <Box display="flex" alignItems="center" gap={1}>
+            <WifiOff fontSize="small" />
+            <Typography variant="body2">
+              目前處於離線模式，內容將儲存在本機。網路恢復後會自動同步到伺服器。
+            </Typography>
+          </Box>
+        </Alert>
+      )}
+
+      {/* 儲存失敗提示 */}
+      {autoSaveStatus === SaveStatus.ERROR && saveError && (
+        <Alert severity="error" sx={{ m: 2 }}>
+          <Box display="flex" alignItems="center" gap={1}>
+            <ErrorIcon fontSize="small" />
+            <Typography variant="body2">
+              自動儲存失敗: {saveError.message}。內容已備份至本機，請稍後重試。
+            </Typography>
+          </Box>
+        </Alert>
+      )}
+
       {/* 編輯器 */}
       <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
         <ProposalEditor
@@ -403,18 +507,6 @@ const ProposalEditorPage: React.FC = () => {
       </Dialog>
     </Box>
   )
-}
-
-// 防抖函數
-function debounce<T extends (...args: any[]) => any>(
-  func: T,
-  wait: number
-): (...args: Parameters<T>) => void {
-  let timeout: ReturnType<typeof setTimeout>
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeout)
-    timeout = setTimeout(() => func(...args), wait)
-  }
 }
 
 export default ProposalEditorPage

@@ -1,22 +1,41 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../utils/database';
 import { logger } from '../utils/logger';
 
+// 驗證 JWT_SECRET 環境變數
+if (!process.env.JWT_SECRET) {
+  throw new Error('CRITICAL: JWT_SECRET environment variable is not configured');
+}
+
+if (process.env.JWT_SECRET === 'your-super-secret-jwt-key-change-in-production' ||
+    process.env.JWT_SECRET === 'default-secret-key') {
+  throw new Error('CRITICAL: Using default JWT_SECRET is not allowed');
+}
+
+const JWT_SECRET = process.env.JWT_SECRET;
+
+// JWT Payload 型別定義
+interface JwtPayload {
+  userId: string;
+  email?: string;
+  type?: 'access' | 'refresh' | 'password_reset' | 'invite';
+  iat?: number;
+  exp?: number;
+}
+
 // 擴展Request interface以包含user資訊
-declare global {
-  namespace Express {
-    interface Request {
-      userId: string;
-      user?: {
-        id: string;
-        email: string;
-        name: string;
-        role: string;
-        company_id: string;
-        is_active: boolean;
-      };
-    }
+declare module 'express-serve-static-core' {
+  interface Request {
+    userId: string;
+    user?: {
+      id: string;
+      email: string;
+      name: string;
+      role: string;
+      company_id: string;
+      is_active: boolean;
+    };
   }
 }
 
@@ -27,7 +46,7 @@ export const authenticateToken = async (
 ): Promise<void> => {
   try {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    const token = authHeader?.split(' ')[1]; // Bearer TOKEN
 
     if (!token) {
       res.status(401).json({
@@ -39,8 +58,8 @@ export const authenticateToken = async (
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret-key') as any;
-      
+      const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+
       // 檢查用戶是否存在且活躍
       const user = await prisma.user.findUnique({
         where: { id: decoded.userId },
@@ -54,7 +73,7 @@ export const authenticateToken = async (
         }
       });
 
-      if (!user || !user.is_active) {
+      if (!user?.is_active) {
         res.status(401).json({
           error: 'Unauthorized',
           message: '用戶不存在或已停用',
@@ -64,10 +83,14 @@ export const authenticateToken = async (
       }
 
       req.userId = user.id;
-      req.user = user;
+      req.user = {
+        ...user,
+        name: user.name ?? '',
+        company_id: user.company_id ?? ''
+      };
       next();
-    } catch (jwtError) {
-      logger.warn('Invalid token', { token: token.substring(0, 20) + '...', error: jwtError });
+    } catch {
+      logger.warn('Invalid token', { token: `${token.substring(0, 20)}...` });
       res.status(401).json({
         error: 'Unauthorized',
         message: '無效的認證token',
@@ -152,7 +175,7 @@ export const requireCompanyAccess = async (
 export const checkResourceCompany = (resourceIdParam: string = 'id') => {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      if (!req.user || !req.user.company_id) {
+      if (!req.user?.company_id) {
         res.status(403).json({
           error: 'Forbidden',
           message: '無權限訪問此資源',

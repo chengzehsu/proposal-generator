@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useRef, useState } from 'react';
-import { logger } from '../utils/logger';
+import { logger } from '@/utils/logger';
 
 interface UseApiMutationOptions<TData, TVariables> {
   onSuccess?: (data: TData, variables: TVariables) => void;

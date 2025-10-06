@@ -3,8 +3,8 @@
  * 用於深度測試AI功能的品質、性能和一致性
  */
 
-import { callGeminiAPI, testGeminiConnection, getGeminiModelInfo } from '../services/gemini';
-import { buildSystemPrompt, buildContextPrompt, buildImprovementPrompt, evaluatePromptQuality } from '../services/prompts';
+import { callGeminiAPI, getGeminiModelInfo, testGeminiConnection } from '../services/gemini';
+import { _buildContextPrompt, buildImprovementPrompt, buildSystemPrompt, evaluatePromptQuality } from '../services/prompts';
 import { logger } from '../utils/logger';
 
 interface TestResult {
@@ -273,11 +273,11 @@ export class AIFunctionalTester {
   private async testPromptEngineering(): Promise<void> {
     const testPrompts = [
       '簡單提示：請寫公司介紹',
-      buildSystemPrompt({
+      `${buildSystemPrompt({
         sectionType: '公司介紹',
         tone: 'professional',
         length: 'medium'
-      }) + '\n\n請為一家AI科技公司撰寫專業的公司介紹'
+      })  }\n\n請為一家AI科技公司撰寫專業的公司介紹`
     ];
 
     for (let i = 0; i < testPrompts.length; i++) {
@@ -515,11 +515,11 @@ export class AIFunctionalTester {
    */
   generateDetailedReport(): string {
     let report = '\n🤖 AI功能深度測試報告\n';
-    report += '='.repeat(50) + '\n\n';
+    report += `${'='.repeat(50)  }\n\n`;
     
     // 總體統計
     report += '📊 總體統計\n';
-    report += `-`.repeat(20) + '\n';
+    report += `${`-`.repeat(20)  }\n`;
     report += `總測試數: ${this.performanceMetrics.totalTests}\n`;
     report += `成功率: ${this.performanceMetrics.successRate.toFixed(1)}%\n`;
     report += `平均響應時間: ${this.performanceMetrics.averageResponseTime.toFixed(0)}ms\n`;
@@ -528,7 +528,7 @@ export class AIFunctionalTester {
     
     // 測試結果詳情
     report += '📋 測試結果詳情\n';
-    report += `-`.repeat(20) + '\n';
+    report += `${`-`.repeat(20)  }\n`;
     
     this.testResults.forEach(test => {
       const status = test.success ? '✅' : '❌';
@@ -556,7 +556,7 @@ export async function runAIFunctionalTest(): Promise<void> {
   try {
     const results = await tester.runComprehensiveTest();
     
-    console.log('\n' + tester.generateDetailedReport());
+    console.log(`\n${  tester.generateDetailedReport()}`);
     
     console.log('🎯 優化建議:');
     results.recommendations.forEach(rec => {

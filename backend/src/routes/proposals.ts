@@ -1,13 +1,13 @@
 import express from 'express';
 import { z } from 'zod';
-import { Prisma } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '../utils/database';
 import { logger } from '../utils/logger';
 import { authenticateToken, requireCompanyAccess } from '../middleware/auth';
 import {
   PROPOSAL_STATUS,
-  isValidStatusTransition,
-  getStatusTransitionError
+  getStatusTransitionError,
+  isValidStatusTransition
 } from '../middleware/validateStatusTransition';
 import { validateConversion } from '../middleware/validateConversion';
 
@@ -70,7 +70,7 @@ router.get('/', authenticateToken, requireCompanyAccess, async (req, res) => {
     };
 
     const result = await optimizedQueries.getProposalsOptimized(
-      req.user!.company_id,
+      (req as any).user.company_id,
       filters,
       paginationOptions,
       req
@@ -106,7 +106,7 @@ router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
     const template = await prisma.proposalTemplate.findFirst({
       where: {
         id: validatedData.template_id,
-        company_id: req.user!.company_id
+        company_id: (req as any).user.company_id
       }
     });
 
@@ -126,8 +126,8 @@ router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
         template_id: validatedData.template_id,
         deadline: validatedData.deadline ? new Date(validatedData.deadline) : undefined,
         status: validatedData.status || '草稿',
-        user_id: req.user!.id,
-        company_id: req.user!.company_id
+        user_id: (req as any).user.id,
+        company_id: (req as any).user.company_id
       },
       select: {
         id: true,
@@ -189,7 +189,7 @@ router.get('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
     const proposal = await prisma.proposal.findFirst({
       where: {
         id: proposalId,
-        company_id: req.user!.company_id
+        company_id: (req as any).user.company_id
       },
       select: {
         id: true,
@@ -258,7 +258,7 @@ router.put('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
     const existingProposal = await prisma.proposal.findFirst({
       where: {
         id: proposalId,
-        company_id: req.user!.company_id
+        company_id: (req as any).user.company_id
       }
     });
 
@@ -336,7 +336,7 @@ router.put('/:id/content', authenticateToken, requireCompanyAccess, async (req, 
     const existingProposal = await prisma.proposal.findFirst({
       where: {
         id: proposalId,
-        company_id: req.user!.company_id
+        company_id: (req as any).user.company_id
       }
     });
 
@@ -406,7 +406,7 @@ router.delete('/:id', authenticateToken, requireCompanyAccess, async (req, res) 
     const existingProposal = await prisma.proposal.findFirst({
       where: {
         id: proposalId,
-        company_id: req.user!.company_id
+        company_id: (req as any).user.company_id
       }
     });
 
@@ -456,7 +456,7 @@ router.patch('/:id/status', authenticateToken, requireCompanyAccess, async (req,
     const existingProposal = await prisma.proposal.findFirst({
       where: {
         id: proposalId,
-        company_id: req.user!.company_id
+        company_id: (req as any).user.company_id
       }
     });
 
@@ -506,7 +506,7 @@ router.patch('/:id/status', authenticateToken, requireCompanyAccess, async (req,
           proposal_id: proposalId!,
           from_status: existingProposal.status,
           to_status: validatedData.status,
-          changed_by: req.user!.id,
+          changed_by: (req as any).user.id,
           note: validatedData.note || null
         }
       });
@@ -550,7 +550,7 @@ router.get('/:id/status-history', authenticateToken, requireCompanyAccess, async
     const existingProposal = await prisma.proposal.findFirst({
       where: {
         id: proposalId,
-        company_id: req.user!.company_id
+        company_id: (req as any).user.company_id
       }
     });
 
@@ -641,7 +641,7 @@ router.post('/:id/convert-to-project', authenticateToken, requireCompanyAccess, 
           achievements: validatedData.achievements,
           tags: JSON.stringify(validatedData.tags || []),
           is_public: validatedData.is_public ?? true,
-          company_id: req.user!.company_id,
+          company_id: (req as any).user.company_id,
           source_proposal_id: proposalId // 記錄來源標案
         },
         select: {
@@ -663,7 +663,7 @@ router.post('/:id/convert-to-project', authenticateToken, requireCompanyAccess, 
         data: {
           converted_to_project_id: newProject.id,
           converted_at: new Date(),
-          converted_by: req.user!.id
+          converted_by: (req as any).user.id
         },
         select: {
           id: true,
@@ -680,7 +680,7 @@ router.post('/:id/convert-to-project', authenticateToken, requireCompanyAccess, 
     logger.info('Proposal converted to project', {
       proposalId,
       projectId: result.project.id,
-      userId: req.user!.id,
+      userId: (req as any).user.id,
       isForceConversion: validatedData.force
     });
 
@@ -734,7 +734,7 @@ router.get('/:id/conversion-status', authenticateToken, requireCompanyAccess, as
     const proposal = await prisma.proposal.findFirst({
       where: {
         id: proposalId,
-        company_id: req.user!.company_id
+        company_id: (req as any).user.company_id
       },
       select: {
         id: true,

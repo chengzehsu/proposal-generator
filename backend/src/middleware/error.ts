@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import { logger } from '@/utils/logger';
+import { ErrorRequestHandler, NextFunction, Request, Response } from 'express';
+import { logger } from '../utils/logger';
 
 export interface AppError extends Error {
   statusCode?: number;
@@ -56,14 +56,14 @@ export class ConflictError extends Error {
   }
 }
 
-export const errorHandler = (
+export const errorHandler = ((
   err: AppError,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): void => {
-  const statusCode = err.statusCode || 500;
-  const message = err.message || 'Internal Server Error';
+  const statusCode = err.statusCode ?? 500;
+  const message = err.message ?? 'Internal Server Error';
 
   // Log error details
   logger.error('Request error', {
@@ -90,11 +90,11 @@ export const errorHandler = (
     timestamp?: string;
     stack?: string;
   }
-  
+
   const response: ErrorResponse = {
     error: err.name || 'Error',
-    message: statusCode === 500 && process.env.NODE_ENV === 'production' 
-      ? 'Something went wrong' 
+    message: statusCode === 500 && process.env.NODE_ENV === 'production'
+      ? 'Something went wrong'
       : message,
     statusCode,
   };
@@ -105,4 +105,4 @@ export const errorHandler = (
   }
 
   res.status(statusCode).json(response);
-};
+}) as ErrorRequestHandler;

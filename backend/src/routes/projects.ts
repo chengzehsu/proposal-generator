@@ -27,7 +27,7 @@ const createProjectSchema = z.object({
 
 const updateProjectSchema = createProjectSchema.partial();
 
-// GET /api/v1/projects - 獲取專案列表
+// GET /api/v1/projects - 獲取專案列表（優化版）
 router.get('/', authenticateToken, requireCompanyAccess, async (req, res) => {
   try {
     const { 
@@ -36,74 +36,49 @@ router.get('/', authenticateToken, requireCompanyAccess, async (req, res) => {
       start_date_to, 
       is_public, 
       page = '1', 
-      limit = '50' 
+      limit = '50',
+      cursor
     } = req.query;
 
-    // 建立查詢條件
-    const where: any = {
-      company_id: req.user!.company_id
+    const pageNum = parseInt(page as string);
+    const limitNum = Math.min(parseInt(limit as string), 100); // 限制最大每頁數量
+
+    // 使用優化的查詢函數
+    const { optimizedQueries } = await import('../utils/queryOptimizer');
+    
+    const filters = {
+      tags,
+      start_date_from,
+      start_date_to,
+      is_public
     };
 
-    // 按標籤篩選
-    if (tags) {
-      where.tags = {
-        hasSome: Array.isArray(tags) ? tags : [tags]
-      };
-    }
+    const paginationOptions = {
+      page: pageNum,
+      limit: limitNum,
+      cursor: cursor as string,
+      orderBy: { created_at: 'desc' as const }
+    };
 
-    // 按日期範圍篩選
-    if (start_date_from || start_date_to) {
-      where.start_date = {};
-      if (start_date_from) {
-        where.start_date.gte = new Date(start_date_from as string);
-      }
-      if (start_date_to) {
-        where.start_date.lte = new Date(start_date_to as string);
-      }
-    }
-
-    // 按公開狀態篩選
-    if (is_public !== undefined) {
-      where.is_public = is_public === 'true';
-    }
-
-    // 分頁參數
-    const pageNum = parseInt(page as string);
-    const limitNum = parseInt(limit as string);
-    const skip = (pageNum - 1) * limitNum;
-
-    const projects = await prisma.project.findMany({
-      where,
-      orderBy: { created_at: 'desc' },
-      skip,
-      take: limitNum,
-      select: {
-        id: true,
-        project_name: true,
-        client_name: true,
-        start_date: true,
-        end_date: true,
-        amount: true,
-        scale: true,
-        description: true,
-        achievements: true,
-        tags: true,
-        is_public: true,
-        attachments: true,
-        created_at: true,
-        updated_at: true
-      }
-    });
+    const result = await optimizedQueries.getProjectsOptimized(
+      (req as any).user.company_id,
+      filters,
+      paginationOptions,
+      req
+    );
 
     // 格式化回應
-    const formattedProjects = projects.map((project: any) => ({
+    const formattedProjects = result.data.map((project: any) => ({
       ...project,
       amount: project.amount?.toString(),
       start_date: project.start_date?.toISOString().split('T')[0],
       end_date: project.end_date?.toISOString().split('T')[0]
     }));
 
-    return res.json(formattedProjects);
+    return res.json({
+      data: formattedProjects,
+      pagination: result.pagination
+    });
   } catch (error) {
     logger.error('Get projects failed', { error, userId: req.userId });
     return res.status(500).json({
@@ -135,10 +110,19 @@ router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
 
     const newProject = await prisma.project.create({
       data: {
-        ...validatedData,
+        name: validatedData.project_name,
+        project_name: validatedData.project_name,
+        description: validatedData.description,
+        client_name: validatedData.client_name,
         start_date: validatedData.start_date ? new Date(validatedData.start_date) : undefined,
         end_date: validatedData.end_date ? new Date(validatedData.end_date) : undefined,
-        company_id: req.user!.company_id
+        amount: validatedData.amount?.toString(),
+        scale: validatedData.scale,
+        achievements: validatedData.achievements,
+        tags: JSON.stringify(validatedData.tags || []),
+        is_public: validatedData.is_public ?? true,
+        attachments: JSON.stringify(validatedData.attachments || []),
+        company_id: (req as any).user.company_id
       },
       select: {
         id: true,
@@ -199,7 +183,7 @@ router.get('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
     const project = await prisma.project.findFirst({
       where: {
         id: projectId,
-        company_id: req.user!.company_id
+        company_id: (req as any).user.company_id
       },
       select: {
         id: true,
@@ -256,7 +240,7 @@ router.put('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
     const existingProject = await prisma.project.findFirst({
       where: {
         id: projectId,
-        company_id: req.user!.company_id
+        company_id: (req as any).user.company_id
       }
     });
 
@@ -354,7 +338,7 @@ router.delete('/:id', authenticateToken, requireCompanyAccess, async (req, res) 
     const existingProject = await prisma.project.findFirst({
       where: {
         id: projectId,
-        company_id: req.user!.company_id
+        company_id: (req as any).user.company_id
       }
     });
 

@@ -46,7 +46,7 @@ router.post('/generate', authenticateToken, requireCompanyAccess, asyncHandler(a
 
     // 獲取公司資料作為上下文
     const company = await prisma.company.findUnique({
-      where: { id: req.user!.company_id },
+      where: { id: (req as any).user.company_id },
       include: {
         team_members: {
           where: { is_active: true, is_key_member: true },
@@ -62,7 +62,7 @@ router.post('/generate', authenticateToken, requireCompanyAccess, asyncHandler(a
 
     // 建構AI提示詞
     const systemPrompt = buildSystemPrompt(validatedData.section_type);
-    const contextPrompt = buildContextPrompt(company, validatedData.context);
+    const contextPrompt = _buildContextPrompt(company, validatedData.context);
     const fullPrompt = `${systemPrompt}\n\n${contextPrompt}\n\n用戶需求：${validatedData.prompt}`;
 
     // 模擬AI生成（實際應呼叫Gemini API）
@@ -353,7 +353,7 @@ interface CompanyContext {
   }>;
 }
 
-function buildContextPrompt(company: CompanyContext | null, additionalContext?: Record<string, unknown>): string {
+function _buildContextPrompt(company: CompanyContext | null, additionalContext?: Record<string, unknown>): string {
   let context = '';
 
   if (company) {

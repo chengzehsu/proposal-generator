@@ -2,7 +2,7 @@
  * Prisma 相關型別定義
  */
 
-import { PrismaClient, Prisma } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 /**
  * Prisma 交易客戶端型別

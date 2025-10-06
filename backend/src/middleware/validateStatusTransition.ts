@@ -65,7 +65,7 @@ export function isValidStatusTransition(
   }
 
   // 檢查轉換是否在允許的轉換列表中
-  const allowedTransitions = VALID_TRANSITIONS[fromStatus] || [];
+  const allowedTransitions = VALID_TRANSITIONS[fromStatus] ?? [];
   return allowedTransitions.includes(toStatus);
 }
 
@@ -87,7 +87,7 @@ export function getStatusTransitionError(
     return `無效的狀態: ${toStatus}`;
   }
 
-  const allowedTransitions = VALID_TRANSITIONS[fromStatus] || [];
+  const allowedTransitions = VALID_TRANSITIONS[fromStatus] ?? [];
   if (allowedTransitions.length === 0) {
     return `狀態 ${fromStatus} 無法轉換至其他狀態`;
   }

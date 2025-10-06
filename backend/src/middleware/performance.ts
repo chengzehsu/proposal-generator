@@ -1,5 +1,12 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { logger } from '../utils/logger';
+
+ 
+// Performance API and NodeJS types are globally available in Node.js runtime
+declare const performance: {
+  now(): number;
+};
+ 
 
 interface PerformanceMetrics {
   startTime: number;
@@ -8,28 +15,37 @@ interface PerformanceMetrics {
   memoryUsage: NodeJS.MemoryUsage;
 }
 
+interface RequestWithPerformance extends Request {
+  performance?: PerformanceMetrics;
+  userId?: string;
+}
+
 // 性能監控中間件
 export const performanceMonitor = (req: Request, res: Response, next: NextFunction) => {
   const startTime = performance.now();
   const startMemory = process.memoryUsage();
-  
+
   // 添加性能指標到請求對象
-  (req as any).performance = {
+  (req as RequestWithPerformance).performance = {
     startTime,
     queryCount: 0,
     queryTime: 0,
     memoryUsage: startMemory
-  } as PerformanceMetrics;
+  };
 
   // 攔截響應結束事件
   const originalEnd = res.end;
-  res.end = function(chunk?: any, encoding?: any): Response {
+  res.end = function(chunk?: Buffer | string, encoding?: BufferEncoding | (() => void)): Response {
     const endTime = performance.now();
     const endMemory = process.memoryUsage();
     const duration = endTime - startTime;
-    
-    const metrics = (req as any).performance as PerformanceMetrics;
-    
+
+    const metrics = (req as RequestWithPerformance).performance;
+
+    if (!metrics) {
+      return originalEnd.call(this, chunk, encoding as BufferEncoding);
+    }
+
     // 記錄性能指標
     const performanceData = {
       method: req.method,
@@ -57,7 +73,7 @@ export const performanceMonitor = (req: Request, res: Response, next: NextFuncti
       logger.debug('Request completed', performanceData);
     }
 
-    return originalEnd.call(this, chunk, encoding);
+    return originalEnd.call(this, chunk, encoding as BufferEncoding);
   };
 
   next();
@@ -67,10 +83,11 @@ export const performanceMonitor = (req: Request, res: Response, next: NextFuncti
 export const trackDatabaseQuery = (queryName: string, startTime: number, req: Request) => {
   const endTime = performance.now();
   const duration = endTime - startTime;
-  
-  if ((req as any).performance) {
-    (req as any).performance.queryCount += 1;
-    (req as any).performance.queryTime += duration;
+
+  const reqWithPerf = req as RequestWithPerformance;
+  if (reqWithPerf.performance) {
+    reqWithPerf.performance.queryCount += 1;
+    reqWithPerf.performance.queryTime += duration;
   }
 
   // 記錄慢查詢
@@ -80,7 +97,7 @@ export const trackDatabaseQuery = (queryName: string, startTime: number, req: Re
       duration: Math.round(duration * 100) / 100,
       url: req.originalUrl,
       method: req.method,
-      userId: (req as any).userId
+      userId: reqWithPerf.userId
     });
   }
 };
@@ -93,10 +110,10 @@ export const memoryMonitor = (req: Request, res: Response, next: NextFunction) =
   // 內存使用超過閾值時記錄警告
   if (heapUsedMB > 512) { // 超過512MB
     logger.warn('High memory usage detected', {
-      heapUsed: heapUsedMB + 'MB',
-      heapTotal: Math.round(memoryUsage.heapTotal / 1024 / 1024) + 'MB',
-      rss: Math.round(memoryUsage.rss / 1024 / 1024) + 'MB',
-      external: Math.round(memoryUsage.external / 1024 / 1024) + 'MB',
+      heapUsed: `${heapUsedMB  }MB`,
+      heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)  }MB`,
+      rss: `${Math.round(memoryUsage.rss / 1024 / 1024)  }MB`,
+      external: `${Math.round(memoryUsage.external / 1024 / 1024)  }MB`,
       url: req.originalUrl,
       method: req.method
     });
@@ -109,14 +126,15 @@ export const memoryMonitor = (req: Request, res: Response, next: NextFunction) =
 export const rateLimitMonitor = (req: Request, res: Response, next: NextFunction) => {
   const rateLimit = res.getHeader('X-RateLimit-Remaining') as string;
   const rateLimitReset = res.getHeader('X-RateLimit-Reset') as string;
-  
+
+  const reqWithPerf = req as RequestWithPerformance;
   if (rateLimit && parseInt(rateLimit) < 10) { // 剩餘請求次數少於10次
     logger.warn('Rate limit approaching', {
       remaining: rateLimit,
       reset: rateLimitReset,
       ip: req.ip,
       url: req.originalUrl,
-      userId: (req as any).userId
+      userId: reqWithPerf.userId
     });
   }
 
@@ -125,11 +143,12 @@ export const rateLimitMonitor = (req: Request, res: Response, next: NextFunction
 
 // 錯誤響應時間監控
 export const errorResponseMonitor = (error: Error, req: Request, res: Response, next: NextFunction) => {
-  const startTime = (req as any).performance?.startTime;
-  
+  const reqWithPerf = req as RequestWithPerformance;
+  const startTime = reqWithPerf.performance?.startTime;
+
   if (startTime) {
     const duration = performance.now() - startTime;
-    
+
     logger.error('Error response', {
       error: error.message,
       stack: error.stack,
@@ -137,7 +156,7 @@ export const errorResponseMonitor = (error: Error, req: Request, res: Response, 
       url: req.originalUrl,
       method: req.method,
       statusCode: res.statusCode,
-      userId: (req as any).userId
+      userId: reqWithPerf.userId
     });
   }
 

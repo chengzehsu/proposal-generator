@@ -1,38 +1,38 @@
 import React, { useState } from 'react'
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Alert,
   Box,
-  Typography,
+  Button,
   Card,
   CardContent,
-  Button,
-  TextField,
-  Grid,
+  Checkbox,
   Chip,
-  Paper,
   CircularProgress,
-  Alert,
-  Stepper,
-  Step,
-  StepLabel,
-  StepContent,
+  Divider,
+  Grid,
   List,
   ListItem,
-  ListItemText,
   ListItemIcon,
-  Checkbox,
-  Divider,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
+  ListItemText,
+  Paper,
+  Step,
+  StepContent,
+  StepLabel,
+  Stepper,
+  TextField,
+  Typography,
 } from '@mui/material'
 import {
-  CloudUpload,
-  Description,
   AutoAwesome,
   CheckCircle,
+  CloudUpload,
+  Description,
+  Download,
   ExpandMore,
   Save,
-  Download,
 } from '@mui/icons-material'
 import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
@@ -61,7 +61,8 @@ const RequirementExtractionPage: React.FC = () => {
   const extractMutation = useMutation({
     mutationFn: aiApi.extractRequirements,
     onSuccess: (response) => {
-      setExtractionResult(response.data)
+      // aiApi.extractRequirements 已經返回 response.data，不需要再訪問 .data
+      setExtractionResult(response as any)
       setActiveStep(2)
       toast.success('需求萃取完成！')
     },
@@ -72,16 +73,12 @@ const RequirementExtractionPage: React.FC = () => {
   })
 
   const availableSections = [
-    { id: 'technical_requirements', label: '技術需求', description: '技術規格、系統架構、技術標準' },
-    { id: 'functional_requirements', label: '功能需求', description: '系統功能、業務流程、使用者需求' },
-    { id: 'performance_requirements', label: '效能需求', description: '效能指標、回應時間、併發量' },
-    { id: 'security_requirements', label: '安全需求', description: '資安要求、存取控制、加密標準' },
-    { id: 'compliance_requirements', label: '合規需求', description: '法規遵循、認證要求、標準規範' },
-    { id: 'timeline_requirements', label: '時程需求', description: '專案時程、里程碑、交付期限' },
-    { id: 'budget_requirements', label: '預算需求', description: '預算限制、成本分析、價格要求' },
-    { id: 'maintenance_requirements', label: '維護需求', description: '維護服務、保固條件、技術支援' },
-    { id: 'training_requirements', label: '教育訓練', description: '使用者培訓、技術轉移、文件需求' },
-    { id: 'deployment_requirements', label: '部署需求', description: '部署環境、基礎建設、安裝要求' },
+    { id: '基本需求', label: '基本需求', description: '基本功能和服務需求' },
+    { id: '技術規格', label: '技術規格', description: '技術規格、系統架構、技術標準' },
+    { id: '時程要求', label: '時程要求', description: '專案時程、里程碑、交付期限' },
+    { id: '預算限制', label: '預算限制', description: '預算限制、成本分析、價格要求' },
+    { id: '評選標準', label: '評選標準', description: '評選條件和加分項目' },
+    { id: '其他條件', label: '其他條件', description: '其他特殊條件和限制' },
   ]
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {

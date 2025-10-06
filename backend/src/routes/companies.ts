@@ -76,10 +76,10 @@ router.post('/', async (req, res) => {
       data: {
         user_id: firstUser.id,
         company_name: name,
-        tax_id: tax_id,
-        address: address || '',
-        phone: phone || '',
-        email: email || ''
+        tax_id,
+        address: address ?? '',
+        phone: phone ?? '',
+        email: email ?? ''
       }
     });
 
@@ -98,7 +98,7 @@ router.post('/', async (req, res) => {
 router.get('/basic', authenticateToken, requireCompanyAccess, asyncHandler(async (req, res) => {
   try {
     const company = await prisma.company.findUnique({
-      where: { id: req.user!.company_id },
+      where: { id: (req as any).user.company_id },
       select: {
         id: true,
         company_name: true,
@@ -149,7 +149,7 @@ router.put('/basic', authenticateToken, requireCompanyAccess, async (req, res) =
 
     // 檢查當前公司資料和版本
     const currentCompany = await prisma.company.findUnique({
-      where: { id: req.user!.company_id }
+      where: { id: (req as any).user.company_id }
     });
 
     if (!currentCompany) {
@@ -204,7 +204,7 @@ router.put('/basic', authenticateToken, requireCompanyAccess, async (req, res) =
     });
 
     const updatedCompany = await prisma.company.update({
-      where: { id: req.user!.company_id },
+      where: { id: (req as any).user.company_id },
       data: processedData,
       select: {
         id: true,

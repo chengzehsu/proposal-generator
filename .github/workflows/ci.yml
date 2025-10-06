@@ -117,8 +117,8 @@ jobs:
       - name: Build backend
         env:
           NODE_ENV: production
-          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://localhost:5432/proposal_generator' }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET || 'fallback-secret-for-build' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: npm run build:backend
 
       - name: Skip frontend build (temporary)

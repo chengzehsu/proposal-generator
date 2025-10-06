@@ -44,19 +44,20 @@ describe('Auth Middleware 單元測試', () => {
       user: undefined,
       userId: undefined,
     };
-    
+
     mockRes = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis(),
-    };
-    
-    mockNext = jest.fn();
-    
+      status: jest.fn().mockReturnThis() as any,
+      json: jest.fn().mockReturnThis() as any,
+      send: jest.fn().mockReturnThis() as any,
+    } as any;
+
+    mockNext = jest.fn() as any;
+
     // Clear all mocks
     jest.clearAllMocks();
-    
-    // Set test environment
-    process.env.JWT_SECRET = 'test-secret';
+
+    // Set test environment - 使用與 .env.test 一致的值
+    process.env.JWT_SECRET = 'test_secret_key_for_testing_only_do_not_use_in_production';
     process.env.API_KEY = 'test-api-key';
   });
 
@@ -81,7 +82,7 @@ describe('Auth Middleware 單元測試', () => {
 
       await authenticateToken(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(jwt.verify).toHaveBeenCalledWith('valid-token', 'test-secret');
+      expect(jwt.verify).toHaveBeenCalledWith('valid-token', 'test_secret_key_for_testing_only_do_not_use_in_production');
       expect(prisma.user.findUnique).toHaveBeenCalledWith({
         where: { id: 'user-id' },
         select: {

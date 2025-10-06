@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { prisma } from '../utils/database';
 import { logger } from '../utils/logger';
 import { authenticateToken } from '../middleware/auth';
-import { RefreshTokenPayload, PasswordResetTokenPayload, InviteTokenPayload } from '../types/jwt';
+import { InviteTokenPayload, PasswordResetTokenPayload, RefreshTokenPayload } from '../types/jwt';
 import { PrismaTransaction } from '../types/prisma';
 import { asyncHandler } from '../utils/asyncHandler';
 
@@ -66,7 +66,7 @@ const acceptInviteSchema = z.object({
 
 // JWT utility functions
 const generateToken = (userId: string): string => {
-  const secret = process.env.JWT_SECRET || 'default-secret-key';
+  const secret = process.env.JWT_SECRET ?? 'default-secret-key';
   
   return jwt.sign(
     { userId },
@@ -76,7 +76,7 @@ const generateToken = (userId: string): string => {
 };
 
 const generateRefreshToken = (userId: string): string => {
-  const secret = process.env.JWT_REFRESH_SECRET || 'default-refresh-secret';
+  const secret = process.env.JWT_REFRESH_SECRET ?? 'default-refresh-secret';
   const options: SignOptions = {
     expiresIn: '30d'
   };
@@ -233,7 +233,7 @@ router.post('/register', async (req, res) => {
           email: company.email,
           capital: company.capital ? company.capital.toString() : undefined,
           established_date: company.established_date ? new Date(company.established_date) : undefined,
-          website: company.website || undefined
+          website: company.website
         }
       });
 
@@ -494,7 +494,7 @@ router.post('/refresh', async (req, res) => {
     }
 
     try {
-      const decoded = jwt.verify(refresh_token, process.env.JWT_REFRESH_SECRET || 'default-refresh-secret') as RefreshTokenPayload;
+      const decoded = jwt.verify(refresh_token, process.env.JWT_REFRESH_SECRET ?? 'default-refresh-secret') as RefreshTokenPayload;
 
       if (decoded.type !== 'refresh') {
         throw new Error('Invalid token type');
@@ -505,7 +505,7 @@ router.post('/refresh', async (req, res) => {
         where: { id: decoded.userId }
       });
 
-      if (!user || !user.is_active) {
+      if (!user?.is_active) {
         return res.status(401).json({
           error: 'Unauthorized',
           message: '用戶不存在或已停用',
@@ -522,7 +522,7 @@ router.post('/refresh', async (req, res) => {
         refresh_token: newRefreshToken
       });
 
-    } catch (jwtError) {
+    } catch {
       return res.status(401).json({
         error: 'Unauthorized',
         message: '無效的 refresh token',
@@ -561,7 +561,7 @@ router.post('/forgot-password', async (req, res) => {
     const resetOptions: SignOptions = { expiresIn: '1h' };
     const resetToken = jwt.sign(
       { userId: user.id, email, type: 'password_reset' },
-      process.env.JWT_SECRET || 'default-secret-key',
+      process.env.JWT_SECRET ?? 'default-secret-key',
       resetOptions
     );
 
@@ -606,7 +606,7 @@ router.post('/verify-reset-token', async (req, res) => {
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret-key') as PasswordResetTokenPayload;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET ?? 'default-secret-key') as PasswordResetTokenPayload;
 
       if (decoded.type !== 'password_reset') {
         throw new Error('Invalid token type');
@@ -617,7 +617,7 @@ router.post('/verify-reset-token', async (req, res) => {
         email: decoded.email
       });
 
-    } catch (jwtError) {
+    } catch {
       return res.status(400).json({
         error: 'Bad Request',
         message: '重設連結已過期或無效',
@@ -650,7 +650,7 @@ router.post('/reset-password', async (req, res) => {
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret-key') as PasswordResetTokenPayload;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET ?? 'default-secret-key') as PasswordResetTokenPayload;
 
       if (decoded.type !== 'password_reset') {
         throw new Error('Invalid token type');
@@ -669,7 +669,7 @@ router.post('/reset-password', async (req, res) => {
         message: '密碼重設成功'
       });
 
-    } catch (jwtError) {
+    } catch {
       return res.status(400).json({
         error: 'Bad Request',
         message: 'Token已使用或已過期',
@@ -738,7 +738,7 @@ router.post('/invite-user', authenticateToken, asyncHandler(async (req, res) => 
         invitedBy: currentUser.id,
         type: 'invite'
       },
-      process.env.JWT_SECRET || 'default-secret-key',
+      process.env.JWT_SECRET ?? 'default-secret-key',
       inviteOptions
     );
 
@@ -784,7 +784,7 @@ router.post('/accept-invite', async (req, res) => {
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret-key') as InviteTokenPayload;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET ?? 'default-secret-key') as InviteTokenPayload;
 
       if (decoded.type !== 'invite') {
         throw new Error('Invalid token type');
@@ -836,7 +836,7 @@ router.post('/accept-invite', async (req, res) => {
         refresh_token: refreshToken
       });
 
-    } catch (jwtError) {
+    } catch {
       return res.status(400).json({
         error: 'Bad Request',
         message: '無效的邀請連結',

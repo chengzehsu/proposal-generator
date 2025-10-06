@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { prisma } from '../utils/database';
 import { logger } from '../utils/logger';
 
@@ -119,15 +119,31 @@ export const validateConversion = async (
 };
 
 // TypeScript 型別擴充
-declare global {
-  namespace Express {
-    interface Request {
-      proposal?: any;
-      conversionWarning?: {
-        type: string;
-        message: string;
-        existing_project?: any;
-      };
-    }
+interface ProposalWithProject {
+  id: string;
+  title: string;
+  status: string;
+  company_id: string;
+  convertedProject?: {
+    id: string;
+    project_name: string;
+    created_at: Date;
+  } | null;
+}
+
+interface ConversionWarning {
+  type: string;
+  message: string;
+  existing_project?: {
+    id: string;
+    project_name: string;
+    created_at: Date;
+  };
+}
+
+declare module 'express-serve-static-core' {
+  interface Request {
+    proposal?: ProposalWithProject;
+    conversionWarning?: ConversionWarning;
   }
 }

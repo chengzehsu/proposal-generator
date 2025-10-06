@@ -1,7 +1,8 @@
 import dotenv from 'dotenv';
+import path from 'path';
 
-// Load environment variables before importing anything else
-dotenv.config();
+// Load test environment variables before importing anything else
+dotenv.config({ path: path.join(__dirname, '../.env.test') });
 
 import { prisma } from '../src/utils/database';
 

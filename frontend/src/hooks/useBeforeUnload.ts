@@ -29,7 +29,7 @@ export function useBeforeUnload(when: boolean, message?: string): void {
       event.preventDefault();
 
       // 現代瀏覽器會忽略自訂訊息，顯示預設的確認對話框
-      const confirmationMessage = messageRef.current || '您有未儲存的變更，確定要離開嗎？';
+      const confirmationMessage = messageRef.current ?? '您有未儲存的變更，確定要離開嗎？';
       event.returnValue = confirmationMessage;
 
       logger.debug('beforeunload triggered', { message: confirmationMessage }, 'useBeforeUnload');

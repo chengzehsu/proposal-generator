@@ -38,10 +38,10 @@ router.post('/proposal', authenticateToken, requireCompanyAccess, async (req, re
     const validatedData = generateProposalSchema.parse(req.body);
 
     // 檢查範本是否屬於當前公司
-    const template = await prisma.template.findFirst({
+    const template = await prisma.proposalTemplate.findFirst({
       where: {
         id: validatedData.template_id,
-        company_id: req.user!.company_id
+        company_id: (req as any).user.company_id
       },
       include: {
         sections: {
@@ -60,7 +60,7 @@ router.post('/proposal', authenticateToken, requireCompanyAccess, async (req, re
 
     // 獲取公司資料作為生成內容的參考
     const company = await prisma.company.findUnique({
-      where: { id: req.user!.company_id },
+      where: { id: (req as any).user.company_id },
       include: {
         team_members: {
           where: { is_active: true },
@@ -84,13 +84,14 @@ router.post('/proposal', authenticateToken, requireCompanyAccess, async (req, re
     
     const newProposal = await prisma.proposal.create({
       data: {
+        title: proposalTitle,
         proposal_title: proposalTitle,
+        user_id: req.userId!,
         client_name: validatedData.client_name,
         template_id: validatedData.template_id,
         status: '草稿',
-        description: `基於「${template.template_name}」範本為${validatedData.client_name}生成的標書`,
-        company_id: req.user!.company_id,
-        content: {} // 初始空內容，將由AI逐步填充
+        company_id: (req as any).user.company_id,
+        content: '{}' // 初始空內容，將由AI逐步填充
       }
     });
 
@@ -98,7 +99,7 @@ router.post('/proposal', authenticateToken, requireCompanyAccess, async (req, re
     const generationContext = {
       company: {
         name: company?.company_name,
-        description: company?.description,
+        business_scope: 'Company business scope', // TODO: Add company_profile relation
         established_date: company?.established_date,
         capital: company?.capital,
         team_members: company?.team_members.map((member: any) => ({
@@ -148,7 +149,7 @@ router.post('/proposal', authenticateToken, requireCompanyAccess, async (req, re
 
     // 異步生成內容（實際應用中應使用隊列系統）
     setImmediate(() => {
-      generateProposalContent(newProposal.id, template.sections, generationContext);
+      generateProposalContent(newProposal.id, template!.sections, generationContext);
     });
 
   } catch (error) {
@@ -179,7 +180,7 @@ router.post('/section', authenticateToken, requireCompanyAccess, async (req, res
     const proposal = await prisma.proposal.findFirst({
       where: {
         id: validatedData.proposal_id,
-        company_id: req.user!.company_id
+        company_id: (req as any).user.company_id
       },
       include: {
         template: {
@@ -200,7 +201,7 @@ router.post('/section', authenticateToken, requireCompanyAccess, async (req, res
       });
     }
 
-    const section = proposal.template.sections[0];
+    const section = proposal.template!.sections[0];
     if (!section) {
       return res.status(404).json({
         error: 'Not Found',
@@ -213,13 +214,15 @@ router.post('/section', authenticateToken, requireCompanyAccess, async (req, res
     const generatedContent = await simulateAIGeneration(section, validatedData.context);
 
     // 更新標書內容
-    const currentContent = proposal.content as Record<string, any> || {};
+    const currentContent = proposal.content 
+      ? JSON.parse(proposal.content as string) as Record<string, any>
+      : {};
     currentContent[section.id] = generatedContent;
 
     await prisma.proposal.update({
       where: { id: validatedData.proposal_id },
       data: {
-        content: currentContent,
+        content: JSON.stringify(currentContent),
         version: proposal.version + 1
       }
     });
@@ -264,7 +267,7 @@ router.get('/status/:proposalId', authenticateToken, requireCompanyAccess, async
     const proposal = await prisma.proposal.findFirst({
       where: {
         id: proposalId,
-        company_id: req.user!.company_id
+        company_id: (req as any).user.company_id
       },
       include: {
         template: {
@@ -285,11 +288,13 @@ router.get('/status/:proposalId', authenticateToken, requireCompanyAccess, async
       });
     }
 
-    const content = proposal.content as Record<string, any> || {};
-    const totalSections = proposal.template.sections.length;
+    const content = proposal.content 
+      ? JSON.parse(proposal.content as string) as Record<string, any>
+      : {};
+    const totalSections = proposal.template!.sections.length;
     const completedSections = Object.keys(content).length;
     
-    const sectionsStatus = proposal.template.sections.map((section: any) => ({
+    const sectionsStatus = proposal.template!.sections.map((section: any) => ({
       id: section.id,
       name: section.section_name,
       order: section.section_order,
@@ -330,14 +335,14 @@ async function generateProposalContent(proposalId: string, sections: any[], cont
     const content: Record<string, any> = {};
     
     for (const section of sections) {
-      const generatedContent = await simulateAIGeneration(section, context);
+      const generatedContent = await simulateAIGeneration(section, _context);
       content[section.id] = generatedContent;
       
       // 更新進度
       await prisma.proposal.update({
         where: { id: proposalId },
         data: {
-          content: content
+          content
         }
       });
       

@@ -1,44 +1,45 @@
 import React, { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
-  Box,
-  Drawer,
   AppBar,
-  Toolbar,
-  Typography,
+  Avatar,
+  Box,
+  Chip,
+  Divider,
+  Drawer,
+  IconButton,
   List,
   ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  IconButton,
-  Avatar,
   Menu,
   MenuItem,
-  Chip,
-  Divider,
-  useTheme,
+  Toolbar,
+  Typography,
   useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import {
-  Menu as MenuIcon,
-  Dashboard,
-  Business,
-  Group,
-  Assignment,
-  EmojiEvents,
-  Description,
-  Create,
-  GetApp,
   AccountCircle,
-  Logout,
-  Settings,
-  AutoAwesome,
-  Translate,
-  FindInPage,
   Analytics,
-  ExpandMore,
+  Assignment,
+  AutoAwesome,
+  Business,
+  Create,
+  Dashboard,
+  Description,
+  EmojiEvents,
   ExpandLess,
+  ExpandMore,
+  FindInPage,
+  GetApp,
+  Group,
+  ListAlt,
+  Logout,
+  Menu as MenuIcon,
+  Settings,
+  Translate,
 } from '@mui/icons-material'
 import { useAuthStore } from '@/services/auth'
 
@@ -61,6 +62,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const menuItems = [
     { text: '控制台', icon: <Dashboard />, path: '/dashboard' },
+    { text: '標案管理', icon: <ListAlt />, path: '/proposals' },
     { text: '公司資料', icon: <Business />, path: '/database/company' },
     { text: '團隊成員', icon: <Group />, path: '/database/team' },
     { text: '專案實績', icon: <Assignment />, path: '/database/projects' },
@@ -120,7 +122,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 borderRadius: 2,
                 minHeight: 48,
                 '&.Mui-selected': {
-                  backgroundColor: theme.palette.primary.main + '15',
+                  backgroundColor: `${theme.palette.primary.main  }15`,
                   color: theme.palette.primary.main,
                   '& .MuiListItemIcon-root': {
                     color: theme.palette.primary.main,
@@ -175,7 +177,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     minHeight: 44,
                     pl: 1,
                     '&.Mui-selected': {
-                      backgroundColor: theme.palette.primary.main + '15',
+                      backgroundColor: `${theme.palette.primary.main  }15`,
                       color: theme.palette.primary.main,
                       '& .MuiListItemIcon-root': {
                         color: theme.palette.primary.main,

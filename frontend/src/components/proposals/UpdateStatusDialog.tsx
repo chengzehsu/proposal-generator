@@ -1,6 +1,9 @@
 import React, { useState } from 'react'
 import {
+  Alert,
+  Box,
   Button,
+  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -9,16 +12,13 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  TextField,
-  Alert,
-  Box,
-  Chip
+  TextField
 } from '@mui/material'
 import {
   ProposalStatus,
+  getStatusColor,
   getValidStatusTransitions,
-  statusLabels,
-  getStatusColor
+  statusLabels
 } from '@/utils/proposalStatus'
 import toast from 'react-hot-toast'
 import { proposalsApi } from '@/services/api'
@@ -64,7 +64,7 @@ const UpdateStatusDialog: React.FC<UpdateStatusDialogProps> = ({
       handleClose()
     } catch (error: any) {
       console.error('Failed to update status:', error)
-      toast.error(error.response?.data?.message || '更新狀態失敗')
+      toast.error(error.response?.data?.message ?? '更新狀態失敗')
     } finally {
       setLoading(false)
     }

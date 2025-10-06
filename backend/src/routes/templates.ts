@@ -26,7 +26,7 @@ router.get('/', authenticateToken, requireCompanyAccess, async (req, res) => {
 
     // 建立查詢條件
     const where: any = {
-      company_id: req.user!.company_id
+      company_id: (req as any).user.company_id
     };
 
     // 按類別篩選
@@ -49,7 +49,7 @@ router.get('/', authenticateToken, requireCompanyAccess, async (req, res) => {
     const limitNum = parseInt(limit as string);
     const skip = (pageNum - 1) * limitNum;
 
-    const templates = await prisma.template.findMany({
+    const templates = await prisma.proposalTemplate.findMany({
       where,
       orderBy: [
         { is_default: 'desc' },
@@ -92,9 +92,9 @@ router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
 
     // 如果設為預設範本，需要先取消其他預設範本
     if (validatedData.is_default) {
-      await prisma.template.updateMany({
+      await prisma.proposalTemplate.updateMany({
         where: {
-          company_id: req.user!.company_id,
+          company_id: (req as any).user.company_id,
           is_default: true
         },
         data: {
@@ -103,10 +103,15 @@ router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
       });
     }
 
-    const newTemplate = await prisma.template.create({
+    const newTemplate = await prisma.proposalTemplate.create({
       data: {
-        ...validatedData,
-        company_id: req.user!.company_id
+        name: validatedData.template_name,
+        template_name: validatedData.template_name,
+        description: validatedData.description,
+        category: validatedData.category,
+        is_public: validatedData.is_public,
+        is_default: validatedData.is_default,
+        company_id: (req as any).user.company_id
       },
       select: {
         id: true,
@@ -150,10 +155,10 @@ router.get('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
   try {
     const templateId = req.params.id;
 
-    const template = await prisma.template.findFirst({
+    const template = await prisma.proposalTemplate.findFirst({
       where: {
         id: templateId,
-        company_id: req.user!.company_id
+        company_id: (req as any).user.company_id
       },
       select: {
         id: true,
@@ -203,10 +208,10 @@ router.put('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
     const validatedData = updateTemplateSchema.parse(req.body);
 
     // 檢查範本是否存在且屬於當前公司
-    const existingTemplate = await prisma.template.findFirst({
+    const existingTemplate = await prisma.proposalTemplate.findFirst({
       where: {
         id: templateId,
-        company_id: req.user!.company_id
+        company_id: (req as any).user.company_id
       }
     });
 
@@ -220,9 +225,9 @@ router.put('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
 
     // 如果設為預設範本，需要先取消其他預設範本
     if (validatedData.is_default && !existingTemplate.is_default) {
-      await prisma.template.updateMany({
+      await prisma.proposalTemplate.updateMany({
         where: {
-          company_id: req.user!.company_id,
+          company_id: (req as any).user.company_id,
           is_default: true,
           id: { not: templateId }
         },
@@ -237,7 +242,7 @@ router.put('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
       Object.entries(validatedData).filter(([_, value]) => value !== undefined)
     );
 
-    const updatedTemplate = await prisma.template.update({
+    const updatedTemplate = await prisma.proposalTemplate.update({
       where: { id: templateId },
       data: updateData,
       select: {
@@ -283,10 +288,10 @@ router.delete('/:id', authenticateToken, requireCompanyAccess, async (req, res) 
     const templateId = req.params.id;
 
     // 檢查範本是否存在且屬於當前公司
-    const existingTemplate = await prisma.template.findFirst({
+    const existingTemplate = await prisma.proposalTemplate.findFirst({
       where: {
         id: templateId,
-        company_id: req.user!.company_id
+        company_id: (req as any).user.company_id
       },
       include: {
         _count: {
@@ -322,7 +327,7 @@ router.delete('/:id', authenticateToken, requireCompanyAccess, async (req, res) 
       });
       
       // 再刪除範本
-      await tx.template.delete({
+      await tx.proposalTemplate.delete({
         where: { id: templateId }
       });
     });

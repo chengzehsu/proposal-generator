@@ -28,7 +28,7 @@ router.get('/', authenticateToken, requireCompanyAccess, async (req, res) => {
 
     // 建立查詢條件
     const where: any = {
-      company_id: req.user!.company_id,
+      company_id: (req as any).user.company_id,
       is_active: true
     };
 
@@ -87,7 +87,7 @@ router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
     let displayOrder = validatedData.display_order;
     if (displayOrder === undefined) {
       const maxOrder = await prisma.teamMember.findFirst({
-        where: { company_id: req.user!.company_id },
+        where: { company_id: (req as any).user.company_id },
         orderBy: { display_order: 'desc' },
         select: { display_order: true }
       });
@@ -96,7 +96,7 @@ router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
       // 檢查display_order是否已存在
       const existingMember = await prisma.teamMember.findFirst({
         where: {
-          company_id: req.user!.company_id,
+          company_id: (req as any).user.company_id,
           display_order: displayOrder,
           is_active: true
         }
@@ -113,9 +113,17 @@ router.post('/', authenticateToken, requireCompanyAccess, async (req, res) => {
 
     const newMember = await prisma.teamMember.create({
       data: {
-        ...validatedData,
+        name: validatedData.name,
+        title: validatedData.title,
+        position: validatedData.title, // position is an alias for title
+        department: validatedData.department,
+        education: validatedData.education,
+        experience: validatedData.experience,
+        expertise: validatedData.expertise,
+        photo_url: validatedData.photo_url,
+        is_key_member: validatedData.is_key_member,
         display_order: displayOrder,
-        company_id: req.user!.company_id
+        company_id: (req as any).user.company_id
       },
       select: {
         id: true,
@@ -169,7 +177,7 @@ router.put('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
     const existingMember = await prisma.teamMember.findFirst({
       where: {
         id: memberId,
-        company_id: req.user!.company_id,
+        company_id: (req as any).user.company_id,
         is_active: true
       }
     });
@@ -186,7 +194,7 @@ router.put('/:id', authenticateToken, requireCompanyAccess, async (req, res) => 
     if (validatedData.display_order !== undefined && validatedData.display_order !== existingMember.display_order) {
       const conflictingMember = await prisma.teamMember.findFirst({
         where: {
-          company_id: req.user!.company_id,
+          company_id: (req as any).user.company_id,
           display_order: validatedData.display_order,
           is_active: true,
           id: { not: memberId }
@@ -261,7 +269,7 @@ router.delete('/:id', authenticateToken, requireCompanyAccess, async (req, res) 
     const existingMember = await prisma.teamMember.findFirst({
       where: {
         id: memberId,
-        company_id: req.user!.company_id,
+        company_id: (req as any).user.company_id,
         is_active: true
       }
     });

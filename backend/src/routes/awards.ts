@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request } from 'express';
 import { z } from 'zod';
 import { prisma } from '../utils/database';
 import { logger } from '../utils/logger';
@@ -6,6 +6,18 @@ import { authenticateToken, requireCompanyAccess } from '../middleware/auth';
 import { asyncHandler } from '../utils/asyncHandler';
 
 const router = express.Router();
+
+// Type guard for authenticated requests with company access
+interface AuthenticatedRequest extends Request {
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    company_id: string;
+    is_active: boolean;
+  };
+}
 
 // Validation schemas
 const createAwardSchema = z.object({
@@ -27,17 +39,28 @@ const updateAwardSchema = createAwardSchema.partial();
 // GET /api/v1/awards - 獲取獲獎紀錄列表
 router.get('/', authenticateToken, requireCompanyAccess, asyncHandler(async (req, res) => {
   try {
-    const { 
-      award_level, 
-      year, 
-      is_public, 
-      page = '1', 
-      limit = '50' 
+    const authedReq = req as AuthenticatedRequest;
+    const {
+      award_level,
+      year,
+      is_public,
+      page = '1',
+      limit = '50'
     } = req.query;
 
+    interface AwardWhereCondition {
+      company_id: string;
+      award_level?: string;
+      award_date?: {
+        gte: Date;
+        lt: Date;
+      };
+      is_public?: boolean;
+    }
+
     // 建立查詢條件
-    const where: any = {
-      company_id: req.user!.company_id
+    const where: AwardWhereCondition = {
+      company_id: authedReq.user.company_id
     };
 
     // 按獎項等級篩選
@@ -114,16 +137,16 @@ router.post('/', authenticateToken, requireCompanyAccess, asyncHandler(async (re
     let displayOrder = validatedData.display_order;
     if (displayOrder === undefined) {
       const maxOrder = await prisma.award.findFirst({
-        where: { company_id: req.user!.company_id },
+        where: { company_id: (req as any).user.company_id },
         orderBy: { display_order: 'desc' },
         select: { display_order: true }
       });
-      displayOrder = (maxOrder?.display_order || 0) + 1;
+      displayOrder = (maxOrder?.display_order ?? 0) + 1;
     } else {
       // 檢查display_order是否已存在
       const existingAward = await prisma.award.findFirst({
         where: {
-          company_id: req.user!.company_id,
+          company_id: (req as any).user.company_id,
           display_order: displayOrder
         }
       });
@@ -145,7 +168,7 @@ router.post('/', authenticateToken, requireCompanyAccess, asyncHandler(async (re
         awarding_organization: validatedData.awarding_organization,
         award_date: new Date(validatedData.award_date),
         display_order: displayOrder,
-        company_id: req.user!.company_id,
+        company_id: (req as any).user.company_id,
         is_public: validatedData.is_public ?? true,
         project_name: validatedData.project_name,
         description: validatedData.description,
@@ -207,7 +230,7 @@ router.get('/:id', authenticateToken, requireCompanyAccess, asyncHandler(async (
     const award = await prisma.award.findFirst({
       where: {
         id: awardId,
-        company_id: req.user!.company_id
+        company_id: (req as any).user.company_id
       },
       select: {
         id: true,
@@ -260,7 +283,7 @@ router.put('/:id', authenticateToken, requireCompanyAccess, asyncHandler(async (
     const existingAward = await prisma.award.findFirst({
       where: {
         id: awardId,
-        company_id: req.user!.company_id
+        company_id: (req as any).user.company_id
       }
     });
 
@@ -276,7 +299,7 @@ router.put('/:id', authenticateToken, requireCompanyAccess, asyncHandler(async (
     if (validatedData.display_order !== undefined && validatedData.display_order !== existingAward.display_order) {
       const conflictingAward = await prisma.award.findFirst({
         where: {
-          company_id: req.user!.company_id,
+          company_id: (req as any).user.company_id,
           display_order: validatedData.display_order,
           id: { not: awardId }
         }
@@ -358,7 +381,7 @@ router.delete('/:id', authenticateToken, requireCompanyAccess, asyncHandler(asyn
     const existingAward = await prisma.award.findFirst({
       where: {
         id: awardId,
-        company_id: req.user!.company_id
+        company_id: (req as any).user.company_id
       }
     });
 

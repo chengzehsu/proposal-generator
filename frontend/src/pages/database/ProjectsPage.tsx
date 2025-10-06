@@ -1,16 +1,16 @@
 import React from 'react'
 import {
   Box,
-  Typography,
+  Button,
   Card,
   CardContent,
-  Button,
   Chip,
   Grid,
+  Typography,
 } from '@mui/material'
-import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid'
-import { Add, Edit, Delete, Public, Lock } from '@mui/icons-material'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid'
+import { Add, Delete, Edit, Lock, Public } from '@mui/icons-material'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { projectsApi } from '@/services/api'
 import toast from 'react-hot-toast'
 
@@ -88,11 +88,13 @@ const ProjectsPage: React.FC = () => {
       width: 120,
       getActions: (params) => [
         <GridActionsCellItem
+          key="edit"
           icon={<Edit />}
           label="編輯"
           onClick={() => console.log('編輯專案', params.row.id)}
         />,
         <GridActionsCellItem
+          key="delete"
           icon={<Delete />}
           label="刪除"
           onClick={() => deleteMutation.mutate(params.row.id)}

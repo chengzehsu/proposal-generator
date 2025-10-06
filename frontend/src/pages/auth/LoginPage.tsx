@@ -1,16 +1,16 @@
 import React, { useState } from 'react'
 import { 
+  Alert, 
   Box, 
+  Button, 
   Card, 
   CardContent, 
-  TextField, 
-  Button, 
-  Typography, 
-  Container,
-  Tabs,
-  Tab,
+  Container, 
   Grid,
-  Alert
+  Tab,
+  Tabs,
+  TextField,
+  Typography
 } from '@mui/material'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -45,10 +45,24 @@ const LoginPage: React.FC = () => {
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: 'test@example.com',
+      password: 'TestPassword123!'
+    }
   })
 
   const registerForm = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: '示範用戶',
+      email: 'demo@example.com',
+      password: 'TestPassword123!',
+      company_name: '示範公司',
+      tax_id: '87654321',
+      address: '台北市信義區信義路五段7號',
+      phone: '02-2345-6789',
+      company_email: 'company@demo.com'
+    }
   })
 
   const handleLogin = async (data: LoginForm) => {
@@ -126,10 +140,46 @@ const LoginPage: React.FC = () => {
                   type="submit"
                   fullWidth
                   variant="contained"
-                  sx={{ mt: 3, mb: 2 }}
+                  sx={{ mt: 3, mb: 1 }}
                   disabled={isLoading}
                 >
                   {isLoading ? '登入中...' : '登入'}
+                </Button>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  sx={{ mb: 2 }}
+                  onClick={async () => {
+                    // 先註冊示範帳戶（如果不存在）
+                    try {
+                      const userData = {
+                        email: 'demo@example.com',
+                        password: 'Demo123!@#',
+                        name: '示範用戶',
+                        company: {
+                          company_name: '示範公司',
+                          tax_id: '12345678',
+                          address: '台北市信義區信義路五段7號',
+                          phone: '02-2345-6789',
+                          email: 'company@demo.com'
+                        }
+                      };
+                      await register(userData);
+                    } catch (_error) {
+                      // 如果註冊失敗（可能是帳戶已存在），直接嘗試登入
+                      console.log('Account might already exist, trying login...');
+                    }
+                    
+                    // 自動登入
+                    try {
+                      await login('demo@example.com', 'Demo123!@#');
+                    } catch (error) {
+                      console.error('Auto login failed:', error);
+                    }
+                  }}
+                  disabled={isLoading}
+                >
+                  🚀 一鍵示範登入
                 </Button>
               </Box>
             )}
