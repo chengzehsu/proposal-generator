@@ -37,15 +37,15 @@ export const useAuthStore = create<AuthState>()(
         try {
           set({ isLoading: true })
           const response = await authApi.login(email, password)
-          
+
           set({
-            user: response.data.user,
-            token: response.data.token,
-            refreshToken: response.data.refreshToken,
+            user: response.data?.user,
+            token: response.data?.token,
+            refreshToken: response.data?.refreshToken,
             isAuthenticated: true,
             isLoading: false,
           })
-          
+
           toast.success('登入成功！')
         } catch (error: unknown) {
           set({ isLoading: false })
@@ -59,15 +59,15 @@ export const useAuthStore = create<AuthState>()(
         try {
           set({ isLoading: true })
           const response = await authApi.register(userData)
-          
+
           set({
-            user: response.data.user,
-            token: response.data.token,
-            refreshToken: response.data.refreshToken,
+            user: response.data?.user,
+            token: response.data?.token,
+            refreshToken: response.data?.refreshToken,
             isAuthenticated: true,
             isLoading: false,
           })
-          
+
           toast.success('註冊成功！歡迎使用智能標書產生器')
         } catch (error: unknown) {
           set({ isLoading: false })
@@ -108,7 +108,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           const response = await authApi.refreshToken()
           set({
-            token: response.data.token,
+            token: response.data?.token,
             isAuthenticated: true,
           })
         } catch (error) {

@@ -16,21 +16,13 @@ import {
   InputLabel,
   LinearProgress,
   MenuItem,
-  Paper,
   Select,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   TextField,
   Typography
 } from '@mui/material'
 import {
   ArrowBack as BackIcon,
   CalendarToday as CalendarIcon,
-  Cancel as CancelIcon,
   CheckCircle as CheckCircleIcon,
   Description as DescriptionIcon,
   Edit as EditIcon,
@@ -62,13 +54,6 @@ interface Proposal {
   updated_at: string
 }
 
-interface TrackingHistory {
-  id: string
-  status: string
-  updated_at: string
-  notes: string
-}
-
 interface AnalyticsData {
   success_rate: number
   confidence_level: 'low' | 'medium' | 'high'
@@ -96,7 +81,6 @@ const ProposalDetailPage: React.FC = () => {
   const navigate = useNavigate()
 
   const [proposal, setProposal] = useState<Proposal | null>(null)
-  const [trackingHistory, setTrackingHistory] = useState<TrackingHistory[]>([])
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [analyticsLoading, setAnalyticsLoading] = useState(false)
@@ -123,16 +107,17 @@ const ProposalDetailPage: React.FC = () => {
   const loadProposalDetail = async () => {
     try {
       setLoading(true)
-      const data = await proposalsApi.getProposal(id!)
+      const response = await proposalsApi.getProposal(id!)
+      const data = response.data
       setProposal(data)
 
       // 初始化表單數據
       setFormData({
-        submission_date: data.submission_date || '',
-        result_status: data.result_status || '',
-        result_date: data.result_date || '',
-        win_probability: data.win_probability || 0,
-        notes: data.notes || ''
+        submission_date: data?.submission_date || '',
+        result_status: data?.result_status || '',
+        result_date: data?.result_date || '',
+        win_probability: data?.win_probability || 0,
+        notes: data?.notes || ''
       })
 
       // 載入追蹤歷史（如果有對應 API）
