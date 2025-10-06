@@ -6,9 +6,11 @@ import { BaseEntity } from './common';
 
 export enum ProposalStatus {
   DRAFT = 'draft',
-  IN_REVIEW = 'in_review',
-  COMPLETED = 'completed', 
-  SUBMITTED = 'submitted'
+  PENDING = 'pending',
+  SUBMITTED = 'submitted',
+  WON = 'won',
+  LOST = 'lost',
+  CANCELLED = 'cancelled'
 }
 
 export interface Proposal extends BaseEntity {
@@ -68,12 +70,8 @@ export interface AIGenerationResponse {
   generation_time_ms: number;
 }
 
-// Export types
-export enum ExportFormat {
-  PDF = 'pdf',
-  DOCX = 'docx', 
-  ODT = 'odt'
-}
+// Export types (re-exported from export.ts)
+import type { ExportFormat } from './export';
 
 export interface ExportOptions {
   format: ExportFormat;
@@ -81,13 +79,6 @@ export interface ExportOptions {
   include_page_numbers?: boolean;
   watermark?: string;
   sections?: string[]; // Section IDs to include
-}
-
-export interface ExportResponse {
-  download_url: string;
-  filename: string;
-  expires_at: Date;
-  file_size: number;
 }
 
 // Create/Update DTOs
@@ -110,3 +101,25 @@ export type ProposalSectionUpdateRequest = {
 
 export type ProposalSubmissionCreateRequest = Omit<ProposalSubmission, 'id' | 'created_at' | 'updated_at' | 'proposal_id'>;
 export type ProposalSubmissionUpdateRequest = Partial<ProposalSubmissionCreateRequest>;
+
+// Status Management types
+export interface ProposalStatusUpdateRequest {
+  status: ProposalStatus;
+  note?: string;
+}
+
+export interface ProposalStatusHistory {
+  id: string;
+  proposal_id: string;
+  from_status: ProposalStatus | null;
+  to_status: ProposalStatus;
+  changed_at: Date;
+  changed_by: string;
+  note?: string;
+}
+
+export interface ProposalStatusHistoryResponse {
+  proposal_id: string;
+  current_status: ProposalStatus;
+  history: ProposalStatusHistory[];
+}

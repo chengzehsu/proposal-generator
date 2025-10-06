@@ -38,30 +38,33 @@ export interface PaginatedResult<T> {
 
 /**
  * User 查詢選項型別
+ * Note: These types are directly available from @prisma/client, commenting out to avoid errors
  */
-export type UserSelect = Prisma.UserSelect;
-export type UserInclude = Prisma.UserInclude;
-export type UserWhereInput = Prisma.UserWhereInput;
-export type UserCreateInput = Prisma.UserCreateInput;
-export type UserUpdateInput = Prisma.UserUpdateInput;
+// export type UserSelect = Prisma.UserSelect;
+// export type UserInclude = Prisma.UserInclude;
+// export type UserWhereInput = Prisma.UserWhereInput;
+// export type UserCreateInput = Prisma.UserCreateInput;
+// export type UserUpdateInput = Prisma.UserUpdateInput;
 
 /**
  * Company 查詢選項型別
+ * Note: These types are directly available from @prisma/client, commenting out to avoid errors
  */
-export type CompanySelect = Prisma.CompanySelect;
-export type CompanyInclude = Prisma.CompanyInclude;
-export type CompanyWhereInput = Prisma.CompanyWhereInput;
-export type CompanyCreateInput = Prisma.CompanyCreateInput;
-export type CompanyUpdateInput = Prisma.CompanyUpdateInput;
+// export type CompanySelect = Prisma.CompanySelect;
+// export type CompanyInclude = Prisma.CompanyInclude;
+// export type CompanyWhereInput = Prisma.CompanyWhereInput;
+// export type CompanyCreateInput = Prisma.CompanyCreateInput;
+// export type CompanyUpdateInput = Prisma.CompanyUpdateInput;
 
 /**
  * Proposal 查詢選項型別
+ * Note: These types are directly available from @prisma/client, commenting out to avoid errors
  */
-export type ProposalSelect = Prisma.ProposalSelect;
-export type ProposalInclude = Prisma.ProposalInclude;
-export type ProposalWhereInput = Prisma.ProposalWhereInput;
-export type ProposalCreateInput = Prisma.ProposalCreateInput;
-export type ProposalUpdateInput = Prisma.ProposalUpdateInput;
+// export type ProposalSelect = Prisma.ProposalSelect;
+// export type ProposalInclude = Prisma.ProposalInclude;
+// export type ProposalWhereInput = Prisma.ProposalWhereInput;
+// export type ProposalCreateInput = Prisma.ProposalCreateInput;
+// export type ProposalUpdateInput = Prisma.ProposalUpdateInput;
 
 /**
  * Template 查詢選項型別
@@ -85,27 +88,30 @@ export type ProposalUpdateInput = Prisma.ProposalUpdateInput;
 
 /**
  * TeamMember 查詢選項型別
+ * Note: These types are directly available from @prisma/client, commenting out to avoid errors
  */
-export type TeamMemberSelect = Prisma.TeamMemberSelect;
-export type TeamMemberInclude = Prisma.TeamMemberInclude;
-export type TeamMemberWhereInput = Prisma.TeamMemberWhereInput;
-export type TeamMemberCreateInput = Prisma.TeamMemberCreateInput;
-export type TeamMemberUpdateInput = Prisma.TeamMemberUpdateInput;
+// export type TeamMemberSelect = Prisma.TeamMemberSelect;
+// export type TeamMemberInclude = Prisma.TeamMemberInclude;
+// export type TeamMemberWhereInput = Prisma.TeamMemberWhereInput;
+// export type TeamMemberCreateInput = Prisma.TeamMemberCreateInput;
+// export type TeamMemberUpdateInput = Prisma.TeamMemberUpdateInput;
 
 /**
  * Project 查詢選項型別
+ * Note: These types are directly available from @prisma/client, commenting out to avoid errors
  */
-export type ProjectSelect = Prisma.ProjectSelect;
-export type ProjectInclude = Prisma.ProjectInclude;
-export type ProjectWhereInput = Prisma.ProjectWhereInput;
-export type ProjectCreateInput = Prisma.ProjectCreateInput;
-export type ProjectUpdateInput = Prisma.ProjectUpdateInput;
+// export type ProjectSelect = Prisma.ProjectSelect;
+// export type ProjectInclude = Prisma.ProjectInclude;
+// export type ProjectWhereInput = Prisma.ProjectWhereInput;
+// export type ProjectCreateInput = Prisma.ProjectCreateInput;
+// export type ProjectUpdateInput = Prisma.ProjectUpdateInput;
 
 /**
  * Award 查詢選項型別
+ * Note: These types are directly available from @prisma/client, commenting out to avoid errors
  */
-export type AwardSelect = Prisma.AwardSelect;
-export type AwardInclude = Prisma.AwardInclude;
-export type AwardWhereInput = Prisma.AwardWhereInput;
-export type AwardCreateInput = Prisma.AwardCreateInput;
-export type AwardUpdateInput = Prisma.AwardUpdateInput;
+// export type AwardSelect = Prisma.AwardSelect;
+// export type AwardInclude = Prisma.AwardInclude;
+// export type AwardWhereInput = Prisma.AwardWhereInput;
+// export type AwardCreateInput = Prisma.AwardCreateInput;
+// export type AwardUpdateInput = Prisma.AwardUpdateInput;
