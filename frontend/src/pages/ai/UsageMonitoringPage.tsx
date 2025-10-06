@@ -1,4 +1,33 @@
 import React, { useState } from 'react'
+
+interface Metric {
+  requests?: number
+  tokens?: number
+  cost?: number
+  avg_response_time?: number
+  success_rate?: number
+}
+
+interface Recommendation {
+  type: string
+  message: string
+  priority: string
+}
+
+interface Service {
+  requests: number
+  tokens: number
+  cost: number
+  success_rate: number
+}
+
+interface DayUsage {
+  date: string
+  requests: number
+  tokens: number
+  cost: number
+  success_rate: number
+}
 import {
   Alert,
   Box,
@@ -59,7 +88,7 @@ function TabPanel(props: TabPanelProps) {
 const UsageMonitoringPage: React.FC = () => {
   const [tabValue, setTabValue] = useState(0)
   const [detailDialogOpen, setDetailDialogOpen] = useState(false)
-  const [selectedMetric, setSelectedMetric] = useState<any>(null)
+  const [selectedMetric, setSelectedMetric] = useState<Metric | null>(null)
 
   // 獲取 AI 使用統計
   const { data: usageData } = useQuery({
@@ -151,7 +180,7 @@ const UsageMonitoringPage: React.FC = () => {
     return 'error'
   }
 
-  const handleShowDetail = (metric: any) => {
+  const handleShowDetail = (metric: Metric) => {
     setSelectedMetric(metric)
     setDetailDialogOpen(true)
   }
@@ -280,7 +309,7 @@ const UsageMonitoringPage: React.FC = () => {
       {/* 建議和警告 */}
       {data.recommendations && data.recommendations.length > 0 && (
         <Box mb={3}>
-          {data.recommendations.map((recommendation: any, index: number) => (
+          {data.recommendations.map((recommendation: Recommendation, index: number) => (
             <Alert
               key={index}
               severity={recommendation.severity}
@@ -326,7 +355,7 @@ const UsageMonitoringPage: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {Object.entries(data.services).map(([key, service]: [string, any]) => (
+                  {Object.entries(data.services).map(([key, service]: [string, Service]) => (
                     <TableRow key={key}>
                       <TableCell>
                         <Box display="flex" alignItems="center">
@@ -376,7 +405,7 @@ const UsageMonitoringPage: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {data.daily_usage.map((day: any) => (
+                  {data.daily_usage.map((day: DayUsage) => (
                     <TableRow key={day.date}>
                       <TableCell>{new Date(day.date).toLocaleDateString('zh-TW')}</TableCell>
                       <TableCell align="right">{day.requests}</TableCell>

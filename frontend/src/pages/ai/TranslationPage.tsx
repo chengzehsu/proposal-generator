@@ -41,7 +41,13 @@ interface TranslationResult {
   translated_content: string
   source_language: string
   target_language: string
-  metadata: any
+  metadata: Record<string, unknown>
+}
+
+interface TranslationFormData {
+  content: string
+  target_language: string
+  context: string
 }
 
 interface TabPanelProps {
@@ -80,13 +86,13 @@ const TranslationPage: React.FC = () => {
       setTranslationHistory(prev => [result, ...prev.slice(0, 9)]) // 保留最近10條記錄
       toast.success('翻譯完成！')
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message ?? '翻譯失敗'
+    onError: (error) => {
+      const message = (error as any).response?.data?.message ?? '翻譯失敗'
       toast.error(message)
     },
   })
 
-  const handleTranslate = (data: any) => {
+  const handleTranslate = (data: TranslationFormData) => {
     if (!data.content.trim()) {
       toast.error('請輸入要翻譯的內容')
       return

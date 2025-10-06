@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
+import type { Proposal } from '@shared/types/proposal'
 import {
   Avatar,
   Box,
@@ -77,7 +78,7 @@ const DashboardPage: React.FC = () => {
       setLoading(true)
 
       // Load proposals
-      let proposalsData: any[] = []
+      let proposalsData: Proposal[] = []
       try {
         const response = await proposalsApi.getProposals({ limit: 5 })
         proposalsData = Array.isArray(response) ? response : []
@@ -86,10 +87,10 @@ const DashboardPage: React.FC = () => {
       }
 
       // Calculate stats
-      const activeCount = proposalsData.filter((p: any) =>
+      const activeCount = proposalsData.filter((p: Proposal) =>
         ['DRAFT', 'IN_REVIEW'].includes(p.status)
       ).length
-      const completedCount = proposalsData.filter((p: any) =>
+      const completedCount = proposalsData.filter((p: Proposal) =>
         p.status === 'COMPLETED'
       ).length
       const successRate = proposalsData.length > 0

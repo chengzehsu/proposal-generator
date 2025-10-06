@@ -46,7 +46,7 @@ const StatusHistoryTimeline: React.FC<StatusHistoryTimelineProps> = ({ proposalI
       if (response.data) {
         setHistory(response.data.history ?? [])
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to load status history:', error)
       toast.error('載入狀態歷史失敗')
     } finally {

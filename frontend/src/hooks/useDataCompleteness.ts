@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { awardsApi, companyApi, projectsApi, teamApi } from '@/services/api'
+import type { Company } from '@shared/types/company'
 
 /**
  * Data completeness interface
@@ -81,7 +82,7 @@ export const useDataCompleteness = () => {
   /**
    * Calculate company data completeness based on required fields
    */
-  const calculateCompanyCompleteness = useCallback((company: any) => {
+  const calculateCompanyCompleteness = useCallback((company: Company | null) => {
     if (!company) {
       return {
         completed: false,

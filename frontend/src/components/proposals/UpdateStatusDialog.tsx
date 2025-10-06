@@ -62,9 +62,10 @@ const UpdateStatusDialog: React.FC<UpdateStatusDialogProps> = ({
       toast.success(`狀態已更新為「${statusLabels[newStatus]}」`)
       onUpdate()
       handleClose()
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to update status:', error)
-      toast.error(error.response?.data?.message ?? '更新狀態失敗')
+      const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message ?? '更新狀態失敗'
+      toast.error(message)
     } finally {
       setLoading(false)
     }

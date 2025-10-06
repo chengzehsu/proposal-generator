@@ -42,7 +42,7 @@ import toast from 'react-hot-toast'
 interface ExtractionResult {
   extracted_requirements: string
   sections_extracted: string[]
-  metadata: any
+  metadata: Record<string, unknown>
 }
 
 const RequirementExtractionPage: React.FC = () => {
@@ -62,12 +62,12 @@ const RequirementExtractionPage: React.FC = () => {
     mutationFn: aiApi.extractRequirements,
     onSuccess: (response) => {
       // aiApi.extractRequirements 已經返回 response.data，不需要再訪問 .data
-      setExtractionResult(response as any)
+      setExtractionResult(response.data)
       setActiveStep(2)
       toast.success('需求萃取完成！')
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message ?? '萃取失敗'
+    onError: (error) => {
+      const message = (error as any).response?.data?.message ?? '萃取失敗'
       toast.error(message)
     },
   })

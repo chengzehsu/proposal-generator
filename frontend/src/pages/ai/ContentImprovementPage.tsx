@@ -37,7 +37,14 @@ interface ImprovementResult {
   original_content: string
   improved_content: string
   improvement_type: string
-  metadata: any
+  metadata: Record<string, unknown>
+}
+
+interface ImprovementFormData {
+  content: string
+  improvement_type: string
+  specific_requirements: string
+  target_length: string
 }
 
 const ContentImprovementPage: React.FC = () => {
@@ -58,13 +65,13 @@ const ContentImprovementPage: React.FC = () => {
       setImprovementResult(response.data)
       toast.success('內容優化完成！')
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message ?? '優化失敗'
+    onError: (error) => {
+      const message = (error as any).response?.data?.message ?? '優化失敗'
       toast.error(message)
     },
   })
 
-  const handleImprove = (data: any) => {
+  const handleImprove = (data: ImprovementFormData) => {
     if (!data.content.trim()) {
       toast.error('請輸入要優化的內容')
       return
