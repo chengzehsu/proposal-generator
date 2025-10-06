@@ -38,11 +38,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Clean and install dependencies
+      - name: Install dependencies
         run: |
-          rm -rf node_modules package-lock.json
-          npm cache clean --force || true
-          npm install
+          npm ci
 
       - name: Build shared package
         run: npm run build:shared
@@ -109,11 +107,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Clean and install dependencies
+      - name: Install dependencies
         run: |
-          rm -rf node_modules package-lock.json
-          npm cache clean --force || true
-          npm install
+          npm ci
 
       - name: Build shared package
         run: npm run build:shared
