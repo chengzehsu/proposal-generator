@@ -273,6 +273,28 @@ export const proposalsApi = {
   deleteProposal: async (id: string) => {
     await apiClient.delete(`/proposals/${id}`);
   },
+
+  // Status management
+  updateProposalStatus: async (id: string, data: { status: string; note?: string }) => {
+    const response = await apiClient.patch<ApiResponse<any>>(`/proposals/${id}/status`, data);
+    return response.data;
+  },
+
+  getProposalStatusHistory: async (id: string) => {
+    const response = await apiClient.get<ApiResponse<{
+      proposal_id: string;
+      current_status: string;
+      history: Array<{
+        id: string;
+        from_status: string | null;
+        to_status: string;
+        changed_at: string;
+        changed_by: string;
+        note?: string;
+      }>;
+    }>>(`/proposals/${id}/status-history`);
+    return response.data;
+  },
 };
 
 // AI API
