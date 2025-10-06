@@ -447,7 +447,7 @@ const UsageMonitoringPage: React.FC = () => {
                     </ListItemIcon>
                     <ListItemText
                       primary="請求次數"
-                      secondary={selectedMetric.requests?.toLocaleString() || 'N/A'}
+                      secondary={selectedMetric.requests?.toLocaleString() ?? 'N/A'}
                     />
                   </ListItem>
                   <ListItem>
@@ -456,7 +456,7 @@ const UsageMonitoringPage: React.FC = () => {
                     </ListItemIcon>
                     <ListItemText
                       primary="Token 使用"
-                      secondary={selectedMetric.tokens?.toLocaleString() || 'N/A'}
+                      secondary={selectedMetric.tokens?.toLocaleString() ?? 'N/A'}
                     />
                   </ListItem>
                   <ListItem>
@@ -465,7 +465,7 @@ const UsageMonitoringPage: React.FC = () => {
                     </ListItemIcon>
                     <ListItemText
                       primary="成本"
-                      secondary={`$${selectedMetric.cost?.toFixed(2) || '0.00'}`}
+                      secondary={`$${selectedMetric.cost?.toFixed(2) ?? '0.00'}`}
                     />
                   </ListItem>
                 </List>
@@ -481,7 +481,7 @@ const UsageMonitoringPage: React.FC = () => {
                     </ListItemIcon>
                     <ListItemText
                       primary="平均回應時間"
-                      secondary={`${selectedMetric.avg_response_time || 'N/A'}s`}
+                      secondary={`${selectedMetric.avg_response_time ?? 'N/A'}s`}
                     />
                   </ListItem>
                   <ListItem>
@@ -490,7 +490,7 @@ const UsageMonitoringPage: React.FC = () => {
                     </ListItemIcon>
                     <ListItemText
                       primary="成功率"
-                      secondary={`${selectedMetric.success_rate || 'N/A'}%`}
+                      secondary={`${selectedMetric.success_rate ?? 'N/A'}%`}
                     />
                   </ListItem>
                 </List>

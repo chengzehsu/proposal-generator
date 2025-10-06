@@ -60,13 +60,13 @@ const ProjectsPage: React.FC = () => {
       field: 'start_date',
       headerName: '開始日期',
       width: 120,
-      renderCell: (params) => params.value || '-',
+      renderCell: (params) => params.value ?? '-',
     },
     {
       field: 'end_date',
       headerName: '結束日期',
       width: 120,
-      renderCell: (params) => params.value || '-',
+      renderCell: (params) => params.value ?? '-',
     },
     {
       field: 'is_public',

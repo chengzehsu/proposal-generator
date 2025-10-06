@@ -113,11 +113,11 @@ const ProposalDetailPage: React.FC = () => {
 
       // 初始化表單數據
       setFormData({
-        submission_date: data?.submission_date || '',
-        result_status: data?.result_status || '',
-        result_date: data?.result_date || '',
-        win_probability: data?.win_probability || 0,
-        notes: data?.notes || ''
+        submission_date: data?.submission_date ?? '',
+        result_status: data?.result_status ?? '',
+        result_date: data?.result_date ?? '',
+        win_probability: data?.win_probability ?? 0,
+        notes: data?.notes ?? ''
       })
 
       // 載入追蹤歷史（如果有對應 API）
@@ -173,10 +173,10 @@ const ProposalDetailPage: React.FC = () => {
       // 創建實績案例
       const projectData = {
         name: proposal.title,
-        client: proposal.client_name || '',
-        amount: proposal.estimated_amount || '',
-        start_date: proposal.submission_date || proposal.created_at,
-        end_date: proposal.result_date || new Date().toISOString(),
+        client: proposal.client_name ?? '',
+        amount: proposal.estimated_amount ?? '',
+        start_date: proposal.submission_date ?? proposal.created_at,
+        end_date: proposal.result_date ?? new Date().toISOString(),
         description: `從標案「${proposal.title}」轉換而來`,
         status: 'completed'
       }
@@ -210,7 +210,7 @@ const ProposalDetailPage: React.FC = () => {
       'pending': 'warning',
       'cancelled': 'default'
     }
-    return colorMap[status] || 'default'
+    return colorMap[status] ?? 'default'
   }
 
   if (loading) {
@@ -295,7 +295,7 @@ const ProposalDetailPage: React.FC = () => {
                     <PersonIcon sx={{ fontSize: 16, verticalAlign: 'middle', mr: 0.5 }} />
                     客戶名稱
                   </Typography>
-                  <Typography variant="body1">{proposal.client_name || '未填寫'}</Typography>
+                  <Typography variant="body1">{proposal.client_name ?? '未填寫'}</Typography>
                 </Grid>
 
                 <Grid item xs={6}>
@@ -303,7 +303,7 @@ const ProposalDetailPage: React.FC = () => {
                     <MoneyIcon sx={{ fontSize: 16, verticalAlign: 'middle', mr: 0.5 }} />
                     預估金額
                   </Typography>
-                  <Typography variant="body1">{proposal.estimated_amount || '未填寫'}</Typography>
+                  <Typography variant="body1">{proposal.estimated_amount ?? '未填寫'}</Typography>
                 </Grid>
 
                 <Grid item xs={6}>
@@ -448,17 +448,17 @@ const ProposalDetailPage: React.FC = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <LinearProgress
                         variant="determinate"
-                        value={proposal.win_probability || 0}
+                        value={proposal.win_probability ?? 0}
                         sx={{ flexGrow: 1, height: 8, borderRadius: 4 }}
                       />
-                      <Typography variant="body2">{proposal.win_probability || 0}%</Typography>
+                      <Typography variant="body2">{proposal.win_probability ?? 0}%</Typography>
                     </Box>
                   </Grid>
 
                   <Grid item xs={12}>
                     <Typography variant="body2" color="text.secondary">備註</Typography>
                     <Typography variant="body1">
-                      {proposal.notes || '無備註'}
+                      {proposal.notes ?? '無備註'}
                     </Typography>
                   </Grid>
                 </Grid>

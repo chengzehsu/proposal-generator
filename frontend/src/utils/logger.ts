@@ -174,16 +174,16 @@ class Logger {
 
     switch (level) {
       case LogLevel.DEBUG:
-        console.debug(prefix, message, data || '');
+        console.debug(prefix, message, data ?? '');
         break;
       case LogLevel.INFO:
-        console.info(prefix, message, data || '');
+        console.info(prefix, message, data ?? '');
         break;
       case LogLevel.WARN:
-        console.warn(prefix, message, data || '');
+        console.warn(prefix, message, data ?? '');
         break;
       case LogLevel.ERROR:
-        console.error(prefix, message, data || '');
+        console.error(prefix, message, data ?? '');
         break;
     }
   }

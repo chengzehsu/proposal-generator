@@ -134,7 +134,7 @@ const ProposalEditorPage: React.FC = () => {
     mutationFn: (data: { content: string }) =>
       proposalsApi.updateProposalContent(id!, {
         content: { main: data.content },
-        version: proposal?.version || 1,
+        version: proposal?.version ?? 1,
       }),
     onSuccess: () => {
       setHasUnsavedChanges(false);
@@ -227,7 +227,7 @@ const ProposalEditorPage: React.FC = () => {
 
   // 版本恢復
   const handleRestoreVersion = (versionData: any) => {
-    setContent(versionData.content.main || '')
+    setContent(versionData.content.main ?? '')
     setVersionsDialogOpen(false)
     toast.success('版本恢復成功！')
   }
@@ -493,7 +493,7 @@ const ProposalEditorPage: React.FC = () => {
                   </ListItemIcon>
                   <ListItemText
                     primary={`版本 ${version.version}`}
-                    secondary={`${new Date(version.created_at).toLocaleString()} - ${version.change_summary || '無說明'}`}
+                    secondary={`${new Date(version.created_at).toLocaleString()} - ${version.change_summary ?? '無說明'}`}
                   />
                 </ListItem>
                 {index < versions.length - 1 && <Divider />}

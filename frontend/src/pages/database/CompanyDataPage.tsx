@@ -70,7 +70,7 @@ const CompanyDataPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['company', 'basic'] })
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || '更新失敗，請稍後再試'
+      const message = error.response?.data?.message ?? '更新失敗，請稍後再試'
       toast.error(message)
       
       if (error.response?.status === 409) {
@@ -85,16 +85,16 @@ const CompanyDataPage: React.FC = () => {
     if (companyData?.data) {
       const company = companyData.data
       form.reset({
-        company_name: company.company_name || '',
-        tax_id: company.tax_id || '',
-        address: company.address || '',
-        phone: company.phone || '',
-        email: company.email || '',
-        capital: company.capital?.toString() || '',
-        established_date: company.established_date || '',
-        website: company.website || '',
+        company_name: company.company_name ?? '',
+        tax_id: company.tax_id ?? '',
+        address: company.address ?? '',
+        phone: company.phone ?? '',
+        email: company.email ?? '',
+        capital: company.capital?.toString() ?? '',
+        established_date: company.established_date ?? '',
+        website: company.website ?? '',
       })
-      setCurrentVersion(company.version || 1)
+      setCurrentVersion(company.version ?? 1)
     }
   }, [companyData, form])
 
@@ -111,14 +111,14 @@ const CompanyDataPage: React.FC = () => {
     if (companyData?.data) {
       const company = companyData.data
       form.reset({
-        company_name: company.company_name || '',
-        tax_id: company.tax_id || '',
-        address: company.address || '',
-        phone: company.phone || '',
-        email: company.email || '',
-        capital: company.capital?.toString() || '',
-        established_date: company.established_date || '',
-        website: company.website || '',
+        company_name: company.company_name ?? '',
+        tax_id: company.tax_id ?? '',
+        address: company.address ?? '',
+        phone: company.phone ?? '',
+        email: company.email ?? '',
+        capital: company.capital?.toString() ?? '',
+        established_date: company.established_date ?? '',
+        website: company.website ?? '',
       })
     }
     setIsEditing(false)

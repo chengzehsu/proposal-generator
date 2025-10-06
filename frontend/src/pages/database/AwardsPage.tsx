@@ -115,13 +115,13 @@ const AwardsPage: React.FC = () => {
       setFormData({
         title: award.title,
         issuer: award.issuer,
-        award_date: award.award_date?.split('T')[0] || '',
-        project_name: award.project_name || '',
-        description: award.description || '',
-        award_type: award.award_type || 'OTHER',
-        award_level: award.award_level || '',
-        amount: award.amount || '',
-        certificate_url: award.certificate_url || '',
+        award_date: award.award_date?.split('T')[0] ?? '',
+        project_name: award.project_name ?? '',
+        description: award.description ?? '',
+        award_type: award.award_type ?? 'OTHER',
+        award_level: award.award_level ?? '',
+        amount: award.amount ?? '',
+        certificate_url: award.certificate_url ?? '',
         is_public: award.is_public,
         display_order: award.display_order
       })
@@ -173,7 +173,7 @@ const AwardsPage: React.FC = () => {
       loadAwards()
     } catch (error: any) {
       console.error('Save award failed:', error)
-      toast.error(error.response?.data?.message || '儲存失敗')
+      toast.error(error.response?.data?.message ?? '儲存失敗')
     }
   }
 
@@ -200,7 +200,7 @@ const AwardsPage: React.FC = () => {
       'PATENT': '專利',
       'OTHER': '其他'
     }
-    return labels[type || ''] || type || 'OTHER'
+    return labels[type ?? ''] ?? type ?? 'OTHER'
   }
 
   const getAwardLevelColor = (level?: string): 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' => {
@@ -212,7 +212,7 @@ const AwardsPage: React.FC = () => {
       '特優': 'primary',
       '佳作': 'info'
     }
-    return colors[level || ''] || 'default'
+    return colors[level ?? ''] ?? 'default'
   }
 
   const availableYears = () => {
@@ -348,7 +348,7 @@ const AwardsPage: React.FC = () => {
                       variant="outlined"
                     />
                   </TableCell>
-                  <TableCell>{award.project_name || '-'}</TableCell>
+                  <TableCell>{award.project_name ?? '-'}</TableCell>
                   <TableCell>
                     <Chip
                       size="small"

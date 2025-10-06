@@ -108,7 +108,7 @@ const TemplatesPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['templates'] })
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || '建立失敗'
+      const message = error.response?.data?.message ?? '建立失敗'
       toast.error(message)
     },
   })
@@ -124,7 +124,7 @@ const TemplatesPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['templates'] })
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || '更新失敗'
+      const message = error.response?.data?.message ?? '更新失敗'
       toast.error(message)
     },
   })
@@ -137,7 +137,7 @@ const TemplatesPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['templates'] })
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || '刪除失敗'
+      const message = error.response?.data?.message ?? '刪除失敗'
       toast.error(message)
     },
   })
@@ -152,7 +152,7 @@ const TemplatesPage: React.FC = () => {
     setEditingTemplate(template)
     form.reset({
       template_name: template.template_name,
-      description: template.description || '',
+      description: template.description ?? '',
       category: template.category,
       is_public: template.is_public,
       is_default: template.is_default,
@@ -323,7 +323,7 @@ const TemplatesPage: React.FC = () => {
                   </Typography>
 
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 2, minHeight: '2.5em' }}>
-                    {template.description || '無描述'}
+                    {template.description ?? '無描述'}
                   </Typography>
 
                   <Box display="flex" gap={1} flexWrap="wrap" mb={2}>
@@ -451,7 +451,7 @@ const TemplatesPage: React.FC = () => {
                   </Typography>
                   <Paper variant="outlined" sx={{ p: 2, mb: 2, minHeight: '100px' }}>
                     <Typography variant="body2">
-                      {viewingTemplate.description || '無描述'}
+                      {viewingTemplate.description ?? '無描述'}
                     </Typography>
                   </Paper>
                 </Grid>

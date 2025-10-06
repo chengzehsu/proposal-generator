@@ -146,7 +146,7 @@ const ProposalsListPage: React.FC = () => {
       [ProposalStatus.LOST]: <CancelIcon fontSize="small" />,
       [ProposalStatus.CANCELLED]: <ArchiveIcon fontSize="small" />
     }
-    return icons[status] || null
+    return icons[status] ?? null
   }
 
   const formatDate = (dateString?: string) => {
@@ -179,7 +179,7 @@ const ProposalsListPage: React.FC = () => {
     const query = searchQuery.toLowerCase()
     return (
       proposal.title.toLowerCase().includes(query) ||
-      (proposal.client_name?.toLowerCase() || '').includes(query)
+      (proposal.client_name?.toLowerCase() ?? '').includes(query)
     )
   })
 
@@ -300,7 +300,7 @@ const ProposalsListPage: React.FC = () => {
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    {proposal.client_name || <Typography variant="caption" color="text.secondary">未指定</Typography>}
+                    {proposal.client_name ?? <Typography variant="caption" color="text.secondary">未指定</Typography>}
                   </TableCell>
                   <TableCell>
                     {proposal.estimated_amount
@@ -324,8 +324,8 @@ const ProposalsListPage: React.FC = () => {
                   <TableCell>
                     <Chip
                       size="small"
-                      icon={getStatusIcon(proposal.status) || undefined}
-                      label={statusLabels[proposal.status as ProposalStatus] || proposal.status}
+                      icon={getStatusIcon(proposal.status) ?? undefined}
+                      label={statusLabels[proposal.status as ProposalStatus] ?? proposal.status}
                       color={getStatusColor(proposal.status)}
                     />
                   </TableCell>

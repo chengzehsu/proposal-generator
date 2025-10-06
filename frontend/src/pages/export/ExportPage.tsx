@@ -122,7 +122,7 @@ const ExportPage: React.FC = () => {
       }
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || '匯出失敗'
+      const message = error.response?.data?.message ?? '匯出失敗'
       toast.error(message)
     },
   })
@@ -137,7 +137,7 @@ const ExportPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['exports', 'history'] })
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || '批次匯出失敗'
+      const message = error.response?.data?.message ?? '批次匯出失敗'
       toast.error(message)
     },
   })
@@ -398,7 +398,7 @@ const ExportPage: React.FC = () => {
                             狀態：{selectedProposal.status}
                           </Typography>
                           <Typography variant="body2" color="text.secondary" paragraph>
-                            截止日期：{selectedProposal.deadline || '未設定'}
+                            截止日期：{selectedProposal.deadline ?? '未設定'}
                           </Typography>
                           
                           <Divider sx={{ my: 2 }} />
@@ -501,7 +501,7 @@ const ExportPage: React.FC = () => {
                           color={proposal.status === 'completed' ? 'success' : 'default'}
                         />
                       </TableCell>
-                      <TableCell>{proposal.deadline || '-'}</TableCell>
+                      <TableCell>{proposal.deadline ?? '-'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -561,7 +561,7 @@ const ExportPage: React.FC = () => {
                             {item.format.toUpperCase()}
                           </Box>
                         </TableCell>
-                        <TableCell>{formatFileSize(item.file_size || 0)}</TableCell>
+                        <TableCell>{formatFileSize(item.file_size ?? 0)}</TableCell>
                         <TableCell>
                           <Box display="flex" alignItems="center" gap={1}>
                             {getStatusIcon(item.status)}

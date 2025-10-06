@@ -130,7 +130,7 @@ const DashboardPage: React.FC = () => {
       'SUBMITTED': 'primary',
       'ARCHIVED': 'default'
     }
-    return colors[status] || 'default'
+    return colors[status] ?? 'default'
   }
 
   const getStatusLabel = (status: string) => {
@@ -141,7 +141,7 @@ const DashboardPage: React.FC = () => {
       'SUBMITTED': '已提交',
       'ARCHIVED': '已封存'
     }
-    return labels[status] || status
+    return labels[status] ?? status
   }
 
   if (loading || completenessLoading) {
@@ -164,7 +164,7 @@ const DashboardPage: React.FC = () => {
       {/* Welcome Section */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" gutterBottom>
-          歡迎回來，{user?.name || '用戶'}！
+          歡迎回來，{user?.name ?? '用戶'}！
         </Typography>
         <Typography variant="body1" color="text.secondary">
           智能標案產生器儀表板

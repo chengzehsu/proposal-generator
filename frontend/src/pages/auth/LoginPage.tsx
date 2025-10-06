@@ -165,7 +165,7 @@ const LoginPage: React.FC = () => {
                         }
                       };
                       await register(userData);
-                    } catch (_error) {
+                    } catch {
                       // 如果註冊失敗（可能是帳戶已存在），直接嘗試登入
                       console.log('Account might already exist, trying login...');
                     }
