@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { useAuthStore } from './auth';
+import type { User, LoginResponse } from '@shared/types/auth';
+import type { Company } from '@shared/types/company';
 
 // API base configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api/v1';
@@ -43,7 +45,7 @@ apiClient.interceptors.response.use(
 );
 
 // API response types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data: T;
   message?: string;
   statusCode: number;
@@ -53,17 +55,13 @@ export interface ApiError {
   error: string;
   message: string;
   statusCode: number;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 // Auth API
 export const authApi = {
   login: async (email: string, password: string) => {
-    const response = await apiClient.post<ApiResponse<{
-      user: any;
-      token: string;
-      refreshToken: string;
-    }>>('/auth/login', { email, password });
+    const response = await apiClient.post<ApiResponse<LoginResponse>>('/auth/login', { email, password });
     return response.data;
   },
 
@@ -79,11 +77,7 @@ export const authApi = {
       email: string;
     };
   }) => {
-    const response = await apiClient.post<ApiResponse<{
-      user: any;
-      token: string;
-      refreshToken: string;
-    }>>('/auth/register', userData);
+    const response = await apiClient.post<ApiResponse<LoginResponse>>('/auth/register', userData);
     return response.data;
   },
 
@@ -103,12 +97,12 @@ export const authApi = {
 // Company API
 export const companyApi = {
   getBasicData: async () => {
-    const response = await apiClient.get<ApiResponse<any>>('/companies/basic');
+    const response = await apiClient.get<ApiResponse<Company>>('/companies/basic');
     return response.data;
   },
 
-  updateBasicData: async (data: any) => {
-    const response = await apiClient.put<ApiResponse<any>>('/companies/basic', data);
+  updateBasicData: async (data: Partial<Company>) => {
+    const response = await apiClient.put<ApiResponse<Company>>('/companies/basic', data);
     return response.data;
   },
 };
